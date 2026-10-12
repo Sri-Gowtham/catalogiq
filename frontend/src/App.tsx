@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/AppShell'
+import { useRouteTitle } from '@/lib/title'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { Contact, Login, Signup } from '@/pages/public/Auth'
 import { Landing } from '@/pages/public/Landing'
@@ -21,6 +22,7 @@ const Product = lazy(() => import('@/pages/app/Product').then((m) => ({ default:
 const Review = lazy(() => import('@/pages/app/Review').then((m) => ({ default: m.Review })))
 
 export default function App() {
+  useRouteTitle()
   return (
     <Routes>
       <Route index element={<Landing />} />

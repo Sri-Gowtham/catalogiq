@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { get, post } from '@/api/http'
 import type { Coverage, Platform } from '@/api/types'
-import { DataTag, StateBadge } from '@/components/badges'
+import { DemoTag, StateBadge } from '@/components/badges'
 import { ErrorState, Loading, PageHeader, Panel } from '@/components/kit'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
@@ -25,7 +25,7 @@ export function Platforms() {
 
   return (
     <>
-      <PageHeader title="Platforms" description="Channels, listings and coverage." tag={<DataTag kind="demo" />} />
+      <PageHeader title="Platforms" description="Channels, listings and coverage." tag={<DemoTag />} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {data.map((p) => (
           <section key={p.key} className="surface flex flex-col p-5">
@@ -42,7 +42,7 @@ export function Platforms() {
               <Stat label="Live" value={formatNum(p.live)} />
               <Stat label="Queued" value={formatNum(p.queued)} />
               <Stat label="Suppressed" value={formatNum(p.suppressed)} danger={p.suppressed > 0} />
-              <Stat label="Avg rank" value={p.avg_rank ? `#${p.avg_rank}` : '-'} />
+              <Stat label="Avg rank" value={p.avg_rank ? `#${p.avg_rank}` : 'n/a'} />
               <Stat label="Click rate" value={formatPct(p.ctr)} />
               <Stat label="Revenue 30d" value={formatInrCompact(p.revenue)} />
             </dl>
@@ -80,7 +80,7 @@ export function Platforms() {
         ))}
       </div>
 
-      {cov && (
+      {cov && cov.rows.length > 0 && (
         <Panel title="Coverage: live products by category and platform" className="mt-4">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[40rem] text-sm">
@@ -111,7 +111,7 @@ export function Platforms() {
                             style={{ background: n ? `color-mix(in oklch, var(--primary) ${Math.round(8 + share * 50)}%, transparent)` : 'var(--muted)' }}
                             aria-label={`${n} ${r.category} products live on ${PLATFORM_SHORT[k] ?? k}`}
                           >
-                            {n || '-'}
+                            {n || '·'}
                           </Link>
                         </td>
                       )

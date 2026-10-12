@@ -5,26 +5,26 @@ const compact = new Intl.NumberFormat('en-IN', { notation: 'compact', maximumFra
 const day = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' })
 const dateTime = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
-export const formatInr = (v: number | null | undefined) => (v == null ? '-' : inr.format(v))
-export const formatInrCompact = (v: number | null | undefined) => (v == null ? '-' : inrCompact.format(v))
-export const formatNum = (v: number | null | undefined) => (v == null ? '-' : num.format(v))
-export const formatCompact = (v: number | null | undefined) => (v == null ? '-' : compact.format(v))
-export const formatPct = (v: number | null | undefined, digits = 1) => (v == null ? '-' : `${v.toFixed(digits)}%`)
+export const formatInr = (v: number | null | undefined) => (v == null ? 'n/a' : inr.format(v))
+export const formatInrCompact = (v: number | null | undefined) => (v == null ? 'n/a' : inrCompact.format(v))
+export const formatNum = (v: number | null | undefined) => (v == null ? 'n/a' : num.format(v))
+export const formatCompact = (v: number | null | undefined) => (v == null ? 'n/a' : compact.format(v))
+export const formatPct = (v: number | null | undefined, digits = 1) => (v == null ? 'n/a' : `${v.toFixed(digits)}%`)
 
 export function formatDay(iso: string | null | undefined): string {
-  if (!iso) return '-'
+  if (!iso) return 'n/a'
   const d = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso)
-  return Number.isNaN(d.getTime()) ? '-' : day.format(d)
+  return Number.isNaN(d.getTime()) ? 'n/a' : day.format(d)
 }
 
 export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return '-'
+  if (!iso) return 'n/a'
   const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? '-' : dateTime.format(d)
+  return Number.isNaN(d.getTime()) ? 'n/a' : dateTime.format(d)
 }
 
 export function formatMs(ms: number | null | undefined): string {
-  if (ms == null) return '-'
+  if (ms == null) return 'n/a'
   if (ms < 1000) return `${ms} ms`
   return `${(ms / 1000).toFixed(1)} s`
 }

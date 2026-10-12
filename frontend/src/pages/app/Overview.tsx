@@ -1,11 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, CircleAlert } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { get } from '@/api/http'
+import { get, post } from '@/api/http'
 import type { Member, Overview as OverviewData, Rule } from '@/api/types'
 import { DataTag, StateBadge } from '@/components/badges'
 import { ErrorState, Kpi, Loading, PageHeader, Panel } from '@/components/kit'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
 import { formatCompact, formatDateTime, formatDay, formatInrCompact, formatNum, formatPct, PLATFORM_SHORT } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -19,6 +20,7 @@ export function Overview() {
   if (isPending) return <Loading className="h-[70vh]" />
   if (error) return <ErrorState error={error} />
   const c = data.counts
+  if (c.total === 0) return <FirstRun name={me?.name.split(' ')[0] ?? ''} role={me?.role ?? 'viewer'} platforms={data.platforms.length} />
   const p = data.performance
   const funnelMax = data.funnel[0]?.count || 1
   const demo = data.workspace.is_demo
@@ -114,7 +116,7 @@ export function Overview() {
           <div className="mt-4 grid grid-cols-2 gap-3 border-t pt-4">
             <div>
               <p className="text-xs text-muted-foreground">Average quality score</p>
-              <p className="text-lg font-semibold tabular-nums">{data.health.avg_quality ?? '-'}</p>
+              <p className="text-lg font-semibold tabular-nums">{data.health.avg_quality ?? 'n/a'}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Passed the gate</p>
@@ -180,6 +182,9 @@ export function Overview() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Panel title="Rank movers this week" tag={demo && <DataTag kind="demo" />}>
+          {data.movers.up.length + data.movers.down.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No rank changes yet.</p>
+          ) : (
           <div className="grid gap-5 sm:grid-cols-2">
             {(['up', 'down'] as const).map((dir) => (
               <div key={dir}>
@@ -199,6 +204,7 @@ export function Overview() {
               </div>
             ))}
           </div>
+          )}
         </Panel>
 
         <Panel
@@ -218,7 +224,7 @@ export function Overview() {
                   <Link to={`/app/products/${u.id}`} className="flex items-center gap-3 py-2 text-sm hover:text-primary">
                     <span className="w-14 shrink-0 text-xs font-medium text-muted-foreground">{formatDay(u.launch_date)}</span>
                     <span className="flex-1 truncate">{u.name}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">Score {u.quality_score ?? '-'}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">Score {u.quality_score ?? 'n/a'}</span>
                   </Link>
                 </li>
               ))}
@@ -272,6 +278,58 @@ export function Overview() {
           )}
         </Panel>
       </div>
+      )}
+    </>
+  )
+}
+
+function FirstRun({ name, role, platforms }: { name: string; role: string; platforms: number }) {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  const sample = useMutation({
+    mutationFn: () => post<{ batch_id: number }>('/batches/sample'),
+    onSuccess: (r) => {
+      qc.invalidateQueries()
+      navigate(`/app/batches/${r.batch_id}`)
+    },
+  })
+  const staff = role !== 'viewer'
+  return (
+    <>
+      <PageHeader title={`Welcome, ${name}`} description={staff ? 'Your catalog is empty. Three steps to get going.' : 'The catalog is empty. Ask a manager to upload a feed.'} />
+      {staff && (
+        <ol className="grid gap-4 md:grid-cols-3">
+          {[
+            { n: 1, t: 'Platforms', d: `${platforms} connected`, done: platforms > 0, to: '/app/platforms', cta: 'Review' },
+            { n: 2, t: 'Brand rules', d: 'Claims and trademarks to check against', done: false, to: '/app/rules', cta: 'Add rules' },
+            { n: 3, t: 'Supplier feed', d: 'CSV or JSON of your products', done: false, to: '/app/batches', cta: 'Upload feed' },
+          ].map((x) => (
+            <li key={x.n} className="surface flex flex-col p-5">
+              <span className={cn('grid size-7 place-items-center rounded-full text-xs font-semibold', x.done ? 'bg-pass text-white' : 'bg-primary/10 text-primary')}>{x.done ? '✓' : x.n}</span>
+              <h2 className="mt-3 font-semibold">{x.t}</h2>
+              <p className="mt-1 flex-1 text-sm text-muted-foreground">{x.d}</p>
+              <Link to={x.to} className="mt-4 text-sm font-medium text-primary hover:underline">
+                {x.cta}
+              </Link>
+            </li>
+          ))}
+        </ol>
+      )}
+      {staff && (
+        <div className="surface mt-4 flex flex-wrap items-center justify-between gap-4 p-5">
+          <div>
+            <p className="font-medium">Want to see it working first?</p>
+            <p className="text-sm text-muted-foreground">Run the bundled sample feed through the agents.</p>
+          </div>
+          <Button onClick={() => sample.mutate()} disabled={sample.isPending}>
+            {sample.isPending ? 'Starting…' : 'Run sample feed'}
+          </Button>
+          {sample.error && (
+            <p role="alert" className="w-full text-sm text-flagged">
+              {sample.error.message}
+            </p>
+          )}
+        </div>
       )}
     </>
   )

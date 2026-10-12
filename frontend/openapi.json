@@ -1,0 +1,954 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CatalogIQ API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Api Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents": {
+      "get": {
+        "summary": "List Agents",
+        "operationId": "list_agents_api_agents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AgentInfo"
+                  },
+                  "type": "array",
+                  "title": "Response List Agents Api Agents Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "summary": "Upload",
+        "operationId": "upload_api_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_api_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sample": {
+      "post": {
+        "summary": "Run Sample",
+        "description": "Run the bundled messy supplier feed so the demo works without picking a file.",
+        "operationId": "run_sample_api_sample_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/status": {
+      "get": {
+        "summary": "Job Status",
+        "operationId": "job_status_api_jobs__job_id__status_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/results": {
+      "get": {
+        "summary": "Job Results",
+        "operationId": "job_results_api_jobs__job_id__results_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResults"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/skus/{sku_id}": {
+      "get": {
+        "summary": "Job Sku",
+        "operationId": "job_sku_api_jobs__job_id__skus__sku_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "sku_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sku Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkuResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "layer": {
+            "type": "integer",
+            "title": "Layer"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "simulated"
+            ],
+            "title": "Mode"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "in_pipeline": {
+            "type": "boolean",
+            "title": "In Pipeline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "layer",
+          "mode",
+          "description",
+          "in_pipeline"
+        ],
+        "title": "AgentInfo"
+      },
+      "AuditBreakdown": {
+        "properties": {
+          "completeness": {
+            "type": "number",
+            "title": "Completeness"
+          },
+          "consistency": {
+            "type": "number",
+            "title": "Consistency"
+          },
+          "coverage": {
+            "type": "number",
+            "title": "Coverage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "completeness",
+          "consistency",
+          "coverage"
+        ],
+        "title": "AuditBreakdown"
+      },
+      "AuditIssue": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Severity"
+          },
+          "issue": {
+            "type": "string",
+            "title": "Issue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "code",
+          "severity",
+          "issue"
+        ],
+        "title": "AuditIssue"
+      },
+      "AuditResult": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "title": "Sku Id"
+          },
+          "audit_score": {
+            "type": "integer",
+            "title": "Audit Score"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "REVIEW",
+              "FLAGGED"
+            ],
+            "title": "Status"
+          },
+          "breakdown": {
+            "$ref": "#/components/schemas/AuditBreakdown"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/AuditIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "audit_score",
+          "status",
+          "breakdown",
+          "issues"
+        ],
+        "title": "AuditResult"
+      },
+      "AuditSummary": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "average_score": {
+            "type": "number",
+            "title": "Average Score"
+          },
+          "status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "PASS",
+                "REVIEW",
+                "FLAGGED"
+              ]
+            },
+            "type": "object",
+            "title": "Status Counts"
+          },
+          "top_issues": {
+            "items": {
+              "$ref": "#/components/schemas/TopIssue"
+            },
+            "type": "array",
+            "title": "Top Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "average_score",
+          "status_counts",
+          "top_issues"
+        ],
+        "title": "AuditSummary"
+      },
+      "Body_upload_api_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_api_upload_post"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IngestError": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "raw": {
+            "title": "Raw"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "reason",
+          "raw"
+        ],
+        "title": "IngestError"
+      },
+      "IngestSummary": {
+        "properties": {
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "ok": {
+            "type": "integer",
+            "title": "Ok"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "format",
+          "total",
+          "ok",
+          "failed"
+        ],
+        "title": "IngestSummary"
+      },
+      "JobResults": {
+        "properties": {
+          "ingest_summary": {
+            "$ref": "#/components/schemas/IngestSummary"
+          },
+          "ingest_errors": {
+            "items": {
+              "$ref": "#/components/schemas/IngestError"
+            },
+            "type": "array",
+            "title": "Ingest Errors"
+          },
+          "audit_summary": {
+            "$ref": "#/components/schemas/AuditSummary"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/SkuResult"
+            },
+            "type": "array",
+            "title": "Skus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ingest_summary",
+          "ingest_errors",
+          "audit_summary",
+          "skus"
+        ],
+        "title": "JobResults"
+      },
+      "JobStatusResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/Stage"
+            },
+            "type": "array",
+            "title": "Stages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "file_name",
+          "status",
+          "created_at",
+          "finished_at",
+          "error",
+          "stages"
+        ],
+        "title": "JobStatusResponse"
+      },
+      "NormalizedRecord": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "title": "Sku Id"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "weight_raw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Raw"
+          },
+          "weight_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Value"
+          },
+          "weight_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Unit"
+          },
+          "ingredients": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ingredients"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "price_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Usd"
+          },
+          "country_of_origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Of Origin"
+          },
+          "source_row": {
+            "type": "integer",
+            "title": "Source Row"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "product_name",
+          "brand",
+          "category",
+          "description",
+          "weight_raw",
+          "weight_value",
+          "weight_unit",
+          "ingredients",
+          "image_url",
+          "price_usd",
+          "country_of_origin",
+          "source_row"
+        ],
+        "title": "NormalizedRecord"
+      },
+      "SkuResult": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "title": "Sku Id"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "raw_record": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Raw Record"
+          },
+          "normalized": {
+            "$ref": "#/components/schemas/NormalizedRecord"
+          },
+          "audit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuditResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "skipped_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skipped Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "product_name",
+          "raw_record",
+          "normalized",
+          "audit",
+          "skipped_reason"
+        ],
+        "title": "SkuResult"
+      },
+      "Stage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "layer": {
+            "type": "integer",
+            "title": "Layer"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "simulated"
+            ],
+            "title": "Mode"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "processed": {
+            "type": "integer",
+            "title": "Processed"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "layer",
+          "mode",
+          "status",
+          "started_at",
+          "duration_ms",
+          "processed",
+          "skipped",
+          "note"
+        ],
+        "title": "Stage"
+      },
+      "TopIssue": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "count"
+        ],
+        "title": "TopIssue"
+      },
+      "UploadResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id"
+        ],
+        "title": "UploadResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

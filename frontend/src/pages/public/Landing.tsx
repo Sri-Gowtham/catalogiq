@@ -94,7 +94,7 @@ const FAQ = [
 function Screen({ src, alt, dark }: { src: string; alt: string; dark?: boolean }) {
   return (
     <figure className={cn('overflow-hidden rounded-2xl border p-1.5 shadow-[0_24px_60px_-20px_rgb(0_40_90/0.35)]', dark ? 'border-white/15 bg-white/5' : 'bg-card')}>
-      <img src={src} alt={alt} width={1440} height={900} className="block w-full rounded-xl" loading="lazy" />
+      <img src={src} alt={alt} width={1860} height={1035} className="block w-full rounded-xl" loading="lazy" />
     </figure>
   )
 }
@@ -151,7 +151,7 @@ export function Landing() {
       <main id="main" tabIndex={-1} className="outline-none">
         <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 pt-14 pb-20 lg:grid-cols-[1fr_1.1fr] lg:pt-20">
           <div>
-            <h1 className="reveal text-4xl font-semibold tracking-tight sm:text-5xl lg:leading-[1.08]">Every product, ready for every shelf.</h1>
+            <h1 className="reveal text-4xl font-semibold tracking-tight sm:text-5xl lg:text-[2.7rem] lg:leading-[1.1]">Every product, ready for every shelf.</h1>
             <p className="reveal mt-5 max-w-lg text-lg text-muted-foreground">
               Audit supplier data, shape content for each marketplace, block weak listings, then track rank and sales.
             </p>

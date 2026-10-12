@@ -24,7 +24,7 @@ export function Panel({ title, action, children, className, tag }: { title?: Rea
   return (
     <section className={cn('surface p-5', className)}>
       {(title || action) && (
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {title && <h2 className="text-sm font-semibold">{title}</h2>}
             {tag}
@@ -103,7 +103,7 @@ export function AuthImage({ productId, kind = 'front', alt, className }: { produ
 
 export function Segmented<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[]; label: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg bg-muted p-0.5">
+    <div role="radiogroup" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-lg bg-muted p-0.5">
       {options.map((o) => (
         <button
           key={o.value}
@@ -112,7 +112,7 @@ export function Segmented<T extends string>({ value, onChange, options, label }:
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            'rounded-md px-3 py-1 text-sm font-medium transition-colors',
+            'shrink-0 rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-colors',
             value === o.value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
           )}
         >

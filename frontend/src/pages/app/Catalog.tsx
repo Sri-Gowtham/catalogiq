@@ -122,7 +122,7 @@ export function Catalog() {
                     </td>
                     <td className="px-3 py-2.5">
                       <span className="flex flex-wrap gap-1">
-                        {p.live_platforms.length === 0 && <span className="text-muted-foreground">-</span>}
+                        {p.live_platforms.length === 0 && <span className="text-muted-foreground">n/a</span>}
                         {p.live_platforms.map((k) => (
                           <span key={k} className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium">
                             {PLATFORM_SHORT[k] ?? k}
@@ -130,7 +130,7 @@ export function Catalog() {
                         ))}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{p.best_rank ? `#${p.best_rank}` : '-'}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{p.best_rank ? `#${p.best_rank}` : 'n/a'}</td>
                     <td className="px-4 py-2.5">
                       <span className="flex flex-wrap items-center gap-1.5">
                         <FlagBadge flag={p.flag} />

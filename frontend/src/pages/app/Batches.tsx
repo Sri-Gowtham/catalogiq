@@ -8,6 +8,7 @@ import { AuditBadge, DataTag, ModeBadge, ProductStatusBadge, ScorePill, StateBad
 import { Empty, ErrorState, Kpi, Loading, PageHeader, Panel } from '@/components/kit'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
+import { useTitle } from '@/lib/title'
 import { formatDateTime, formatMs, formatNum, layerName, STATUS_LABEL } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -154,6 +155,7 @@ export function BatchDetail() {
     enabled: !!data,
   })
 
+  useTitle(data?.batch.name)
   if (isPending) return <Loading className="h-[70vh]" />
   if (error) return <ErrorState error={error} />
   const b = data.batch

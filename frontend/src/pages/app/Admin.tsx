@@ -70,7 +70,7 @@ export function Reports() {
                     </Link>
                   </td>
                   <td className="py-2 text-right tabular-nums">{c.products}</td>
-                  <td className="py-2 text-right tabular-nums">{c.avg_quality ?? '-'}</td>
+                  <td className="py-2 text-right tabular-nums">{c.avg_quality ?? 'n/a'}</td>
                 </tr>
               ))}
             </tbody>

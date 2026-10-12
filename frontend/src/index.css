@@ -147,6 +147,7 @@
 
 /* Cool surface with a hairline border and a soft blue-tinted lift (see DESIGN.md). */
 @utility surface {
+  min-width: 0;
   background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);

@@ -5,7 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { del, get, post } from '@/api/http'
 import type { AbTest, ListingRow, PerfSummary, Publishing as PublishingData, Rule, RuleFinding, Workbench as WorkbenchData } from '@/api/types'
-import { DataTag, FlagBadge, ModeBadge, RankChange, StateBadge } from '@/components/badges'
+import { DataTag, DemoTag, FlagBadge, ModeBadge, RankChange, StateBadge } from '@/components/badges'
 import { Empty, ErrorState, Field, fieldClass, Kpi, Loading, PageHeader, Panel, Segmented } from '@/components/kit'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
@@ -70,8 +70,8 @@ export function Publishing() {
                         </Link>
                       </td>
                       <td className="py-2">{r.platform_name}</td>
-                      <td className="py-2 text-right tabular-nums">{r.quality_score ?? '-'}</td>
-                      <td className="py-2 text-right">{view === 'queue' ? <StateBadge state={r.status} /> : r.rank ? `#${r.rank}` : '-'}</td>
+                      <td className="py-2 text-right tabular-nums">{r.quality_score ?? 'n/a'}</td>
+                      <td className="py-2 text-right">{view === 'queue' ? <StateBadge state={r.status} /> : r.rank ? `#${r.rank}` : 'n/a'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -132,13 +132,22 @@ export function Performance() {
   if (summary.isPending) return <Loading className="h-[70vh]" />
   if (summary.error) return <ErrorState error={summary.error} />
   const s = summary.data
+  const noData = s.series.length === 0
+
+  if (noData)
+    return (
+      <>
+        <PageHeader title="Performance" description="Rank and sales per listing, last 30 days." />
+        <Empty title="No sales data yet">Numbers appear here once products are live on a platform.</Empty>
+      </>
+    )
 
   return (
     <>
       <PageHeader
         title="Performance"
         description="Rank and sales per listing, last 30 days."
-        tag={<DataTag kind="demo" />}
+        tag={<DemoTag />}
         actions={
           <select value={platform} onChange={(e) => set('platform', e.target.value)} aria-label="Platform" className={cn(fieldClass, 'w-44')}>
             <option value="">All platforms</option>
@@ -156,7 +165,7 @@ export function Performance() {
         <Kpi label="Clicks" value={formatCompact(s.clicks)} />
         <Kpi label="Click rate" value={formatPct(s.ctr)} />
         <Kpi label="Conversion" value={formatPct(s.conversion)} />
-        <Kpi label="Average rank" value={s.avg_rank ? `#${s.avg_rank}` : '-'} />
+        <Kpi label="Average rank" value={s.avg_rank ? `#${s.avg_rank}` : 'n/a'} />
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
@@ -220,17 +229,17 @@ export function Performance() {
           <Empty title="No listings here" />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[56rem] text-sm">
+            <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 font-medium">Product</th>
                   <th className="pb-2 font-medium">Platform</th>
                   <th className="pb-2 text-right font-medium">Rank</th>
-                  <th className="pb-2 text-right font-medium">Click rate</th>
-                  <th className="pb-2 text-right font-medium">Conversion</th>
-                  <th className="pb-2 text-right font-medium">Orders</th>
+                  <th className="hidden pb-2 text-right font-medium md:table-cell">Click rate</th>
+                  <th className="hidden pb-2 text-right font-medium md:table-cell">Conversion</th>
+                  <th className="hidden pb-2 text-right font-medium md:table-cell">Orders</th>
                   <th className="pb-2 text-right font-medium">Revenue</th>
-                  <th className="pb-2 pl-4 font-medium">Diagnosis</th>
+                  <th className="hidden pb-2 pl-4 font-medium lg:table-cell">Diagnosis</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -241,6 +250,7 @@ export function Performance() {
                         {l.name}
                       </Link>
                       <span className="block text-xs text-muted-foreground">{l.category}</span>
+                      {l.diagnosis && <span className="mt-1 block text-xs text-[oklch(0.5_0.12_70)] lg:hidden">{l.diagnosis}</span>}
                     </td>
                     <td className="py-2.5">
                       <span className="flex flex-col items-start gap-1">
@@ -251,12 +261,12 @@ export function Performance() {
                     <td className="py-2.5 text-right">
                       <RankChange rank={l.rank} prev={l.rank_prev} />
                     </td>
-                    <td className="py-2.5 text-right tabular-nums">{formatPct(l.ctr)}</td>
-                    <td className="py-2.5 text-right tabular-nums">{formatPct(l.conversion)}</td>
-                    <td className="py-2.5 text-right tabular-nums">{formatNum(l.orders)}</td>
+                    <td className="hidden py-2.5 text-right tabular-nums md:table-cell">{formatPct(l.ctr)}</td>
+                    <td className="hidden py-2.5 text-right tabular-nums md:table-cell">{formatPct(l.conversion)}</td>
+                    <td className="hidden py-2.5 text-right tabular-nums md:table-cell">{formatNum(l.orders)}</td>
                     <td className="py-2.5 text-right tabular-nums">{formatInr(l.revenue)}</td>
-                    <td className="max-w-72 py-2.5 pl-4 text-xs text-muted-foreground">
-                      {l.diagnosis ?? '-'}
+                    <td className="hidden max-w-72 py-2.5 pl-4 text-xs text-muted-foreground lg:table-cell">
+                      {l.diagnosis ?? 'n/a'}
                       {l.diagnosis && canWrite && (
                         <Button size="xs" variant="outline" className="mt-1.5 flex" onClick={() => fix.mutate(l.listing_id)} disabled={fix.isPending}>
                           Test a fix
@@ -530,9 +540,9 @@ export function Workbench() {
                     <td className="py-2.5">
                       <ModeBadge mode={a.mode} />
                     </td>
-                    <td className="py-2.5 text-right tabular-nums">{a.runs || '-'}</td>
+                    <td className="py-2.5 text-right tabular-nums">{a.runs || 'n/a'}</td>
                     <td className="py-2.5 text-right tabular-nums">{formatMs(a.avg_ms)}</td>
-                    <td className="py-2.5 text-right tabular-nums">{a.processed ? formatNum(a.processed) : '-'}</td>
+                    <td className="py-2.5 text-right tabular-nums">{a.processed ? formatNum(a.processed) : 'n/a'}</td>
                     <td className={cn('py-2.5 text-right tabular-nums', a.failed > 0 && 'text-flagged')}>{a.failed}</td>
                   </tr>
                 ))}

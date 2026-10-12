@@ -1,4 +1,5 @@
 import type { AuditStatus, ListingFlag, Severity } from '@/api/types'
+import { useAuth } from '@/lib/auth'
 import { STATUS_LABEL } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -12,7 +13,7 @@ const AUDIT: Record<AuditStatus, string> = {
 }
 
 export function AuditBadge({ status, className }: { status: AuditStatus | null; className?: string }) {
-  if (!status) return <span className="text-muted-foreground">-</span>
+  if (!status) return <span className="text-muted-foreground">n/a</span>
   return <span className={cn(pill, 'font-semibold tracking-wide', AUDIT[status], className)}>{status}</span>
 }
 
@@ -105,7 +106,7 @@ export function FlagBadge({ flag }: { flag: ListingFlag }) {
 }
 
 export function ScorePill({ score, className }: { score: number | null | undefined; className?: string }) {
-  if (score == null) return <span className="text-muted-foreground">-</span>
+  if (score == null) return <span className="text-muted-foreground">n/a</span>
   const tone = score >= 70 ? 'text-pass' : score >= 50 ? amberText : 'text-flagged'
   return (
     <span className={cn('inline-flex items-center gap-2', className)}>
@@ -121,10 +122,10 @@ export function ScorePill({ score, className }: { score: number | null | undefin
 }
 
 export function RankChange({ rank, prev }: { rank: number | null; prev: number | null }) {
-  if (rank == null) return <span className="text-muted-foreground">-</span>
+  if (rank == null) return <span className="text-muted-foreground">n/a</span>
   const diff = prev == null ? 0 : prev - rank
   return (
-    <span className="inline-flex items-baseline gap-1.5 tabular-nums">
+    <span className="relative inline-flex items-baseline gap-1.5 tabular-nums">
       <span className="font-medium">#{rank}</span>
       {diff !== 0 && (
         <span className={cn('text-xs', diff > 0 ? 'text-pass' : 'text-flagged')}>
@@ -135,4 +136,10 @@ export function RankChange({ rank, prev }: { rank: number | null; prev: number |
       )}
     </span>
   )
+}
+
+/** Shown only in the demo workspace, where sales and ranks are seeded. Real workspaces never carry it. */
+export function DemoTag() {
+  const { me } = useAuth()
+  return me?.is_demo ? <DataTag kind="demo" /> : null
 }

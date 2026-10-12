@@ -5,10 +5,11 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { get, patch, post } from '@/api/http'
 import type { ContentOut, ListingPerformance, ProductDetail } from '@/api/types'
-import { AuditBadge, DataTag, FlagBadge, ProductStatusBadge, RankChange, SeverityBadge, StateBadge } from '@/components/badges'
+import { AuditBadge, DataTag, DemoTag, FlagBadge, ProductStatusBadge, RankChange, SeverityBadge, StateBadge } from '@/components/badges'
 import { AuthImage, Empty, ErrorState, fieldClass, Loading, Panel, Segmented } from '@/components/kit'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
+import { useTitle } from '@/lib/title'
 import { formatDay, formatInr, formatNum, formatPct } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -28,6 +29,7 @@ export function Product() {
   const tab = (TABS.some((t) => t.key === params.get('tab')) ? params.get('tab') : 'overview') as Tab
   const { data: p, error, isPending } = useQuery({ queryKey: ['product', id], queryFn: () => get<ProductDetail>(`/products/${id}`) })
 
+  useTitle(p?.name ?? p?.sku)
   if (isPending) return <Loading className="h-[70vh]" />
   if (error) return <ErrorState error={error} />
 
@@ -121,7 +123,7 @@ function Metric({ label, value, extra }: { label: string; value: number | null; 
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="flex items-center gap-2 text-lg font-semibold tabular-nums">
-        {value ?? '-'} {extra}
+        {value ?? 'n/a'} {extra}
       </p>
     </div>
   )
@@ -160,7 +162,7 @@ function PublishButton({ product }: { product: ProductDetail }) {
 function OverviewTab({ p }: { p: ProductDetail }) {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
-      <Panel title="Listings" className="lg:col-span-2" tag={p.origin === 'demo' && <DataTag kind="demo" />}>
+      <Panel title="Listings" className="lg:col-span-2" tag={p.origin === 'demo' && <DemoTag />}>
         {p.listings.length === 0 ? (
           <Empty title="Not listed anywhere yet">Listings appear once the product is published.</Empty>
         ) : (
@@ -218,7 +220,7 @@ function OverviewTab({ p }: { p: ProductDetail }) {
       </Panel>
       <Panel title="Data audit" tag={<DataTag kind="live" />}>
         <p className="text-sm text-muted-foreground">
-          Score <strong className="text-foreground tabular-nums">{p.audit_score ?? '-'}</strong> out of 100 before any AI ran.
+          Score <strong className="text-foreground tabular-nums">{p.audit_score ?? 'n/a'}</strong> out of 100 before any AI ran.
         </p>
         {p.audit_issues.length === 0 ? (
           <p className="mt-3 flex items-center gap-2 text-sm text-pass">
@@ -241,7 +243,7 @@ function OverviewTab({ p }: { p: ProductDetail }) {
 
 /* ------------------------------------------------------------------ platform content */
 function Counter({ n, max }: { n: number; max: number | null }) {
-  if (max == null) return <span className="text-[11px] text-muted-foreground tabular-nums">{n} chars · no limit</span>
+  if (max == null) return <span className="text-[11px] text-muted-foreground tabular-nums">{n} chars</span>
   const over = n > max
   return (
     <span className={cn('text-[11px] tabular-nums', over ? 'font-medium text-flagged' : 'text-muted-foreground')}>
@@ -578,7 +580,7 @@ function ImageVerdict({ p, platform }: { p: ProductDetail; platform: string }) {
 function ImagesTab({ p }: { p: ProductDetail }) {
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_26rem]">
-      <Panel title="Image set" tag={<DataTag kind="demo" />}>
+      <Panel title="Image set" tag={<DemoTag />}>
         <div className="grid gap-4 sm:grid-cols-3">
           {p.images.map((img) => (
             <figure key={img.kind}>
@@ -591,7 +593,7 @@ function ImagesTab({ p }: { p: ProductDetail }) {
                   </span>
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
-                  {img.bg_white ? 'Plain white background' : 'Coloured background'} · quality {img.quality_score ?? '-'}
+                  {img.bg_white ? 'Plain white background' : 'Coloured background'} · quality {img.quality_score ?? 'n/a'}
                 </span>
                 {img.notes && <span className="mt-0.5 block text-xs text-flagged">{img.notes}</span>}
               </figcaption>
@@ -627,7 +629,7 @@ function ImagesTab({ p }: { p: ProductDetail }) {
 
 /* ------------------------------------------------------------------ source vs enriched */
 function show(v: unknown): string {
-  if (v == null || v === '') return '-'
+  if (v == null || v === '') return 'n/a'
   if (Array.isArray(v)) return v.join(', ')
   return String(v)
 }
@@ -706,14 +708,14 @@ function ScoreTab({ p }: { p: ProductDetail }) {
       <div className="space-y-4">
         <div className="surface p-5 text-center">
           <p className="text-xs text-muted-foreground">Total</p>
-          <p className={cn('text-5xl font-semibold tracking-tight tabular-nums', (p.quality_score ?? 0) >= 70 ? 'text-pass' : 'text-flagged')}>{p.quality_score ?? '-'}</p>
+          <p className={cn('text-5xl font-semibold tracking-tight tabular-nums', (p.quality_score ?? 0) >= 70 ? 'text-pass' : 'text-flagged')}>{p.quality_score ?? 'n/a'}</p>
           <p className="mt-1 text-sm text-muted-foreground">Publishing needs 70 or more</p>
           <p className="mt-3 text-sm">{p.gate_blocked ? <span className="text-flagged">{p.gate_reason}</span> : p.quality_score != null && <span className="text-pass">Cleared the gate</span>}</p>
         </div>
         <div className="surface p-5 text-sm">
           <p className="font-medium">Two scores, two jobs</p>
           <p className="mt-1 text-muted-foreground">
-            The <strong>audit score</strong> ({p.audit_score ?? '-'}) checks the supplier data before AI runs. The <strong>quality score</strong> checks the finished content before it is
+            The <strong>audit score</strong> ({p.audit_score ?? 'n/a'}) checks the supplier data before AI runs. The <strong>quality score</strong> checks the finished content before it is
             published.
           </p>
         </div>
@@ -757,7 +759,7 @@ function PerformanceTab({ p }: { p: ProductDetail }) {
     <div className="space-y-4">
       <Panel
         title="Last 30 days by platform"
-        tag={<DataTag kind="demo" />}
+        tag={<DemoTag />}
         action={
           <Segmented
             label="Metric"

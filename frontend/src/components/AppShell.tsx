@@ -208,14 +208,14 @@ const ROLE_INFO: Record<Role, string> = {
 }
 
 /** Demo only: jump between the three demo users to see what each role gets. */
-function RoleSwitcher() {
+function RoleSwitcher({ className = 'hidden md:flex' }: { className?: string }) {
   const { me, signIn } = useAuth()
   const navigate = useNavigate()
   const [busy, setBusy] = useState<Role | null>(null)
   if (!me?.is_demo) return null
   return (
-    <div role="radiogroup" aria-label="View the demo as" className="hidden items-center gap-1 rounded-lg border bg-card p-0.5 md:flex">
-      <span className="px-2 text-xs text-muted-foreground">View as</span>
+    <div role="radiogroup" aria-label="View the demo as" className={cn('items-center gap-1 rounded-lg border bg-card p-0.5', className)}>
+      <span className="px-2 text-xs whitespace-nowrap text-muted-foreground">View as</span>
       {(['admin', 'manager', 'viewer'] as Role[]).map((r) => (
         <button
           key={r}
@@ -260,22 +260,23 @@ function NoAccess() {
   )
 }
 
-function GlobalSearch() {
+function GlobalSearch({ className = 'hidden w-full max-w-sm md:block', onDone }: { className?: string; onDone?: () => void }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const submit = (e: FormEvent) => {
     e.preventDefault()
     navigate(q.trim() ? `/app/catalog?q=${encodeURIComponent(q.trim())}` : '/app/catalog')
+    onDone?.()
   }
   return (
-    <form role="search" onSubmit={submit} className="relative hidden w-full max-w-sm md:block">
+    <form role="search" onSubmit={submit} className={cn('relative', className)}>
       <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
       <input
         type="search"
         name="q"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search products by name or SKU…"
+        placeholder="Search products…"
         aria-label="Search products"
         autoComplete="off"
         className="h-9 w-full rounded-lg border border-input bg-card pr-3 pl-9 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
@@ -287,7 +288,10 @@ function GlobalSearch() {
 export function AppShell() {
   const { me, loading } = useAuth()
   const location = useLocation()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  // the drawer is tied to the navigation it was opened on, so any route change closes it
+  const [openAt, setOpenAt] = useState<string | null>(null)
+  const mobileOpen = openAt === location.key
+  const setMobileOpen = (open: boolean) => setOpenAt(open ? location.key : null)
 
   if (loading) return <Loading className="m-8 h-[60vh] w-auto" />
   if (!me) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
@@ -331,6 +335,10 @@ export function AppShell() {
               <button type="button" aria-label="Close menu" onClick={() => setMobileOpen(false)} className="grid size-9 place-items-center rounded-lg hover:bg-muted">
                 <X className="size-4" />
               </button>
+            </div>
+            <div className="space-y-3 border-b p-4">
+              <GlobalSearch className="block w-full" onDone={() => setMobileOpen(false)} />
+              <RoleSwitcher className="flex w-fit" />
             </div>
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </div>
