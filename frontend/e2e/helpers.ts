@@ -9,6 +9,8 @@ export async function login(page: Page, role: keyof typeof USERS) {
   await page.fill('input[name=password]', PASSWORD)
   await page.click('button[type=submit]')
   await page.waitForURL('**/app')
+  // wait for the signed-in shell itself, not just any heading, so later checks never race the first render
+  await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible()
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 }
 

@@ -8,7 +8,7 @@ const RESTRICTED = 'This page is for managers and admins'
 test('viewer: six menu items, restricted pages, no action buttons', async ({ page }) => {
   const errors = watch(page)
   await login(page, 'viewer')
-  expect(await page.locator('nav[aria-label=Main] a').allInnerTexts()).toEqual(['Overview', 'Products', 'Platforms', 'Performance', 'Reports', 'Settings'])
+  await expect(page.locator('nav[aria-label=Main] a')).toHaveText(['Overview', 'Products', 'Platforms', 'Performance', 'Reports', 'Settings'])
   for (const path of STAFF_PAGES) {
     await page.goto(path)
     await expect(page.getByText(RESTRICTED)).toBeVisible()
