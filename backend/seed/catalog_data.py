@@ -1,0 +1,183 @@
+"""Definitions for the fictional demo brand "Acme Foods". Everything here is invented sample data."""
+
+BRAND = "Acme"
+COMPANY = "Acme Foods"
+
+# Marketplace rules are illustrative defaults. Verify each marketplace's current seller guidelines before quoting them.
+PLATFORMS = [
+    dict(key="amazon_in", name="Amazon India", kind="marketplace", region="IN",
+         rules=dict(title_limit=200, bullet_count=5, bullet_limit=255, desc_limit=2000,
+                    mandatory=["brand", "title", "bullets", "description", "category", "weight", "allergens"],
+                    images=dict(min_px=1000, white_bg=True, min_count=3))),
+    dict(key="flipkart", name="Flipkart", kind="marketplace", region="IN",
+         rules=dict(title_limit=120, bullet_count=5, bullet_limit=500, desc_limit=1000,
+                    mandatory=["brand", "title", "features", "description", "category", "net_quantity"],
+                    images=dict(min_px=800, white_bg=True, min_count=3))),
+    dict(key="noon", name="Noon", kind="marketplace", region="AE",
+         rules=dict(title_limit=150, bullet_count=4, bullet_limit=300, desc_limit=1500, bilingual=True,
+                    mandatory=["brand", "title_en_ar", "bullets", "description", "category", "country_of_origin"],
+                    images=dict(min_px=1000, white_bg=True, min_count=3))),
+    dict(key="blinkit", name="Blinkit", kind="quick_commerce", region="IN",
+         rules=dict(title_limit=80, bullet_count=3, bullet_limit=90, desc_limit=300,
+                    mandatory=["brand", "title", "pack_size", "shelf_life"],
+                    images=dict(min_px=800, white_bg=True, min_count=2))),
+    dict(key="website", name="Brand website", kind="own_site", region="Global",
+         rules=dict(title_limit=None, bullet_count=None, bullet_limit=None, desc_limit=None,
+                    mandatory=["brand", "title", "description", "ingredients", "allergens", "nutritional_info"],
+                    images=dict(min_px=1200, white_bg=False, min_count=3))),
+]
+
+# (rule region, kind, value, note)
+RULES = [
+    ("ALL", "restricted_claim", "healthy", "Unsubstantiated health claim"),
+    ("ALL", "restricted_claim", "natural", "Needs substantiation"),
+    ("ALL", "restricted_claim", "pure", "Needs substantiation"),
+    ("ALL", "restricted_claim", "best in the world", "Unverifiable superlative"),
+    ("ALL", "restricted_claim", "guaranteed results", "Outcome claim"),
+    ("ALL", "mandatory_claim", "No artificial colours", "Required on packs that make a colour claim"),
+    ("ALL", "trademark", "Acme", "Write as ACME"),
+    ("ALL", "allergen_format", "Contains: <list>. May contain: <list>.", "Standard allergen statement"),
+    ("IN", "mandatory_claim", "Veg / non-veg symbol", "Required on food listings in India"),
+    ("IN", "mandatory_claim", "FSSAI licence number", "Required on food listings in India"),
+    ("AE", "mandatory_claim", "Halal certification", "Required for meat-derived ingredients"),
+    ("AE", "restricted_claim", "pork-derived", "Not permitted"),
+    ("US", "restricted_claim", "reduces cholesterol", "Drug-type claim"),
+    ("US", "restricted_claim", "heart healthy", "Regulated claim"),
+]
+
+# Per category: pack drawing, colours, noun phrases, variants (size, unit, price in INR), and product lines.
+# A line may override `variants`. Bullet templates use {name} {size} {flavour} {ing} {allergens}.
+CATEGORIES = [
+    dict(
+        name="Chocolates & Candy", code="CHO", pack="bar", colors=("#6f3b1b", "#f1c27d"), noun="chocolate", noun_ar="شوكولاتة",
+        origin="India", shelf_life="9 months", nutrition="Energy 530 kcal | Fat 29 g | Carbohydrate 58 g | Protein 7 g",
+        variants=[(25, "g", 20), (40, "g", 35), (50, "g", 40), (75, "g", 60), (100, "g", 85)],
+        bullets=[
+            "{flavour}, made with {ing}.",
+            "Convenient {size} pack, ideal for the lunchbox, desk drawer or a quick treat.",
+            "Individually wrapped to keep every bar fresh until you open it.",
+            "Smooth, rich taste that is easy to share or keep to yourself.",
+            "{allergens}",
+        ],
+        lines=[
+            ("Choco Peanut Bar", "Milk chocolate with roasted peanuts", ["Milk chocolate", "Roasted peanuts", "Sugar", "Glucose syrup", "Cocoa butter"], "Contains: Milk, Peanuts, Soy.", "chocolate bar"),
+            ("Caramel Crunch Bar", "Caramel and crisped rice in milk chocolate", ["Milk chocolate", "Caramel", "Rice crisps", "Sugar", "Butter"], "Contains: Milk, Soy. May contain: Nuts.", "caramel chocolate"),
+            ("Hazelnut Wafer Bar", "Crisp wafer with hazelnut cream", ["Wheat flour", "Hazelnut paste", "Sugar", "Palm oil", "Cocoa"], "Contains: Wheat, Hazelnuts, Milk, Soy.", "wafer chocolate"),
+            ("Dark Choco Bar", "Rich dark chocolate, 55% cocoa", ["Cocoa mass", "Sugar", "Cocoa butter", "Vanilla"], "Contains: Soy. May contain: Milk.", "dark chocolate"),
+            ("Coconut Choco Bar", "Coconut filling in milk chocolate", ["Milk chocolate", "Desiccated coconut", "Sugar", "Glucose syrup"], "Contains: Milk, Soy.", "coconut chocolate"),
+            ("Milk Choco Slab", "Smooth milk chocolate for sharing", ["Sugar", "Cocoa butter", "Milk powder", "Cocoa mass"], "Contains: Milk, Soy.", "milk chocolate"),
+            ("Choco Gems", "Candy-coated chocolate pieces", ["Sugar", "Milk chocolate", "Starch", "Food colours"], "Contains: Milk, Soy.", "chocolate candy"),
+            ("Toffee Bites", "Buttery toffee pieces", ["Sugar", "Glucose syrup", "Butter", "Condensed milk"], "Contains: Milk.", "toffee candy"),
+        ],
+    ),
+    dict(
+        name="Snacks", code="SNK", pack="pouch", colors=("#b8322a", "#f7dc6f"), noun="snack", noun_ar="وجبة خفيفة",
+        origin="India", shelf_life="6 months", nutrition="Energy 540 kcal | Fat 33 g | Carbohydrate 53 g | Protein 6 g",
+        variants=[(30, "g", 10), (52, "g", 20), (90, "g", 35), (150, "g", 55), (200, "g", 70)],
+        bullets=[
+            "{flavour}, made with {ing}.",
+            "Resealable-style pack in {size}, easy to carry to work, school or travel.",
+            "Crunchy and flavourful, made for sharing at get-togethers.",
+            "Packed in a nitrogen-flushed pouch to protect freshness and crunch.",
+            "{allergens}",
+        ],
+        lines=[
+            ("Salted Potato Chips", "Thin, crisp and lightly salted", ["Potatoes", "Sunflower oil", "Salt"], "May contain: Milk.", "potato chips"),
+            ("Masala Chips", "Spiced potato chips", ["Potatoes", "Sunflower oil", "Spice mix", "Salt"], "May contain: Milk, Mustard.", "masala chips"),
+            ("Cheese Puffs", "Crunchy corn puffs with cheese", ["Corn meal", "Vegetable oil", "Cheese powder", "Salt"], "Contains: Milk.", "cheese puffs"),
+            ("Baked Crackers", "Oven-baked savoury crackers", ["Wheat flour", "Vegetable oil", "Salt", "Yeast"], "Contains: Wheat.", "crackers"),
+            ("Roasted Peanuts", "Dry roasted and salted peanuts", ["Peanuts", "Salt"], "Contains: Peanuts.", "roasted peanuts"),
+            ("Corn Tortilla Chips", "Stone-ground corn chips", ["Corn", "Sunflower oil", "Salt"], "May contain: Milk.", "tortilla chips"),
+            ("Trail Mix", "Nuts, seeds and raisins", ["Almonds", "Cashews", "Raisins", "Pumpkin seeds"], "Contains: Tree nuts.", "trail mix"),
+            ("Rice Crisps", "Light, savoury rice crisps", ["Rice flour", "Vegetable oil", "Salt", "Seasoning"], "May contain: Soy.", "rice crisps"),
+        ],
+    ),
+    dict(
+        name="Pet Food", code="PET", pack="pouch", colors=("#1f6f50", "#e8f5e9"), noun="pet food", noun_ar="طعام الحيوانات الأليفة",
+        origin="India", shelf_life="12 months", nutrition="Crude protein 24% | Crude fat 12% | Crude fibre 4% | Moisture 10%",
+        variants=[(400, "g", 180), (1.2, "kg", 520), (3, "kg", 1150), (7, "kg", 2400), (10, "kg", 3300)],
+        bullets=[
+            "{flavour}, made with {ing}.",
+            "Complete everyday nutrition in a {size} pack for steady, healthy feeding.",
+            "Crunchy kibble texture that supports chewing and dental care.",
+            "Formulated with vitamins and minerals for coat, skin and energy.",
+            "{allergens}",
+        ],
+        lines=[
+            ("Adult Dry Dog Food Chicken", "Complete dry food for adult dogs with chicken", ["Cereals", "Chicken", "Meat and animal derivatives", "Vegetable oil", "Minerals"], "Contains: Cereals, Poultry.", "dry dog food"),
+            ("Puppy Dry Food", "Growth formula dry food for puppies", ["Cereals", "Chicken", "Milk powder", "Fish oil", "Minerals"], "Contains: Cereals, Poultry, Milk.", "puppy food"),
+            ("Adult Cat Food Tuna", "Complete dry food for adult cats with tuna", ["Cereals", "Tuna", "Meat and animal derivatives", "Vegetable oil", "Taurine"], "Contains: Cereals, Fish.", "cat food"),
+            ("Kitten Dry Food", "Growth formula dry food for kittens", ["Cereals", "Chicken", "Fish", "Milk powder", "Taurine"], "Contains: Cereals, Poultry, Fish, Milk.", "kitten food"),
+            ("Wet Dog Food Beef", "Beef chunks in gravy for dogs", ["Beef", "Meat and animal derivatives", "Gravy", "Vitamins"], "Contains: Beef.", "wet dog food", [(70, "g", 35), (85, "g", 45), (100, "g", 55), (150, "g", 80), (380, "g", 160)]),
+            ("Wet Cat Food Salmon", "Salmon pieces in jelly for cats", ["Salmon", "Fish derivatives", "Jelly", "Vitamins"], "Contains: Fish.", "wet cat food", [(70, "g", 35), (85, "g", 45), (100, "g", 55), (150, "g", 80), (380, "g", 160)]),
+            ("Dental Dog Treats", "Chew treats that support dental care", ["Cereals", "Glycerin", "Chicken", "Minerals"], "Contains: Cereals, Poultry.", "dog treats", [(60, "g", 90), (100, "g", 140), (200, "g", 260), (400, "g", 480), (1, "kg", 1050)]),
+            ("Chicken Cat Treats", "Crunchy chicken-flavoured treats for cats", ["Cereals", "Chicken", "Fish oil", "Taurine"], "Contains: Cereals, Poultry, Fish.", "cat treats", [(60, "g", 90), (100, "g", 140), (200, "g", 260), (400, "g", 480), (1, "kg", 1050)]),
+        ],
+    ),
+    dict(
+        name="Soups & Sauces", code="SOU", pack="can", colors=("#b03a2e", "#fdebd0"), noun="soup", noun_ar="شوربة",
+        origin="India", shelf_life="18 months", nutrition="Energy 60 kcal | Fat 1.5 g | Carbohydrate 10 g | Protein 2 g",
+        variants=[(200, "g", 60), (300, "g", 85), (400, "g", 110), (500, "g", 135), (680, "g", 170)],
+        bullets=[
+            "{flavour}, made with {ing}.",
+            "Ready in minutes: heat and serve, or use as a base for your own recipes.",
+            "{size} pack that suits one to three servings.",
+            "Slow-cooked taste with no added preservatives.",
+            "{allergens}",
+        ],
+        lines=[
+            ("Tomato Soup", "Classic tomato soup", ["Tomato puree", "Water", "Sugar", "Salt", "Spice extract"], "May contain: Milk, Wheat.", "tomato soup"),
+            ("Chicken Noodle Soup", "Chicken and noodles in savoury broth", ["Water", "Chicken", "Egg noodles", "Carrots", "Celery"], "Contains: Wheat, Egg, Poultry.", "chicken soup"),
+            ("Sweet Corn Soup", "Creamy sweet corn soup", ["Sweet corn", "Water", "Corn starch", "Salt", "Pepper"], "May contain: Milk.", "sweet corn soup"),
+            ("Mushroom Soup", "Creamy mushroom soup", ["Mushrooms", "Cream", "Water", "Flour", "Salt"], "Contains: Milk, Wheat.", "mushroom soup"),
+            ("Tomato Basil Pasta Sauce", "Tomato sauce with basil and garlic", ["Tomatoes", "Basil", "Garlic", "Olive oil", "Salt"], "None declared.", "pasta sauce"),
+            ("Arrabbiata Pasta Sauce", "Spicy tomato and chilli pasta sauce", ["Tomatoes", "Red chilli", "Garlic", "Olive oil"], "None declared.", "arrabbiata sauce"),
+            ("Tomato Ketchup", "Thick, tangy tomato ketchup", ["Tomato paste", "Sugar", "Vinegar", "Salt", "Spices"], "None declared.", "tomato ketchup"),
+            ("Chilli Sauce", "Hot red chilli sauce", ["Red chilli", "Vinegar", "Garlic", "Salt", "Sugar"], "None declared.", "chilli sauce"),
+        ],
+    ),
+    dict(
+        name="Beverages", code="BEV", pack="bottle", colors=("#d9730d", "#fff3e0"), noun="beverage", noun_ar="مشروب",
+        origin="India", shelf_life="9 months", nutrition="Energy 45 kcal | Fat 0 g | Carbohydrate 11 g | Protein 0.3 g",
+        variants=[(200, "ml", 20), (250, "ml", 25), (500, "ml", 45), (1000, "ml", 85), (1500, "ml", 120)],
+        bullets=[
+            "{flavour}, made with {ing}.",
+            "Refreshing taste in a {size} bottle, ready to drink chilled.",
+            "Easy to carry and perfect for home, office or travel.",
+            "Bottled to lock in fresh flavour. Shake well before opening.",
+            "{allergens}",
+        ],
+        lines=[
+            ("Orange Juice", "Orange juice from concentrate", ["Orange juice concentrate", "Water", "Sugar", "Vitamin C"], "None declared.", "orange juice"),
+            ("Mixed Fruit Juice", "Blend of apple, orange and pineapple", ["Apple juice", "Orange juice", "Pineapple juice", "Sugar"], "None declared.", "mixed fruit juice"),
+            ("Apple Juice", "Clear apple juice", ["Apple juice concentrate", "Water", "Vitamin C"], "None declared.", "apple juice"),
+            ("Mango Drink", "Sweet mango fruit drink", ["Mango pulp", "Water", "Sugar", "Acidity regulator"], "None declared.", "mango drink"),
+            ("Lemon Iced Tea", "Black tea with lemon", ["Water", "Sugar", "Black tea extract", "Lemon juice"], "None declared.", "iced tea"),
+            ("Sparkling Water Lime", "Sparkling water with lime flavour", ["Carbonated water", "Natural lime flavour"], "None declared.", "sparkling water"),
+            ("Coconut Water", "Tender coconut water", ["Coconut water"], "None declared.", "coconut water"),
+            ("Guava Nectar", "Guava fruit nectar", ["Guava pulp", "Water", "Sugar", "Acidity regulator"], "None declared.", "guava juice"),
+        ],
+    ),
+    dict(
+        name="Breakfast", code="BRK", pack="box", colors=("#c99a0b", "#fef9e7"), noun="cereal", noun_ar="رقائق الإفطار",
+        origin="India", shelf_life="12 months", nutrition="Energy 380 kcal | Fat 3 g | Carbohydrate 78 g | Protein 8 g",
+        variants=[(250, "g", 110), (350, "g", 150), (500, "g", 210), (750, "g", 310), (1000, "g", 400)],
+        bullets=[
+            "{flavour}, made with {ing}.",
+            "{size} pack that makes a quick, filling breakfast for the whole family.",
+            "Crisp texture that stays crunchy in milk.",
+            "Fortified with vitamins and iron.",
+            "{allergens}",
+        ],
+        lines=[
+            ("Corn Flakes", "Toasted golden corn flakes", ["Corn", "Sugar", "Malt extract", "Salt", "Iron", "Vitamins"], "May contain: Wheat.", "corn flakes"),
+            ("Choco Cereal Rings", "Chocolate-flavoured cereal rings", ["Wheat flour", "Sugar", "Cocoa", "Corn flour", "Vitamins"], "Contains: Wheat. May contain: Milk.", "chocolate cereal"),
+            ("Classic Oats", "Rolled oats", ["Whole grain oats"], "May contain: Wheat.", "rolled oats"),
+            ("Fruit & Nut Muesli", "Muesli with fruit and nuts", ["Oats", "Wheat flakes", "Raisins", "Almonds", "Sugar"], "Contains: Wheat, Tree nuts.", "muesli"),
+            ("Honey Wheat Flakes", "Wheat flakes with honey", ["Wheat", "Honey", "Sugar", "Salt", "Vitamins"], "Contains: Wheat.", "wheat flakes"),
+            ("Masala Oats", "Savoury oats with masala", ["Oats", "Dehydrated vegetables", "Spice mix", "Salt"], "May contain: Wheat, Milk.", "masala oats"),
+            ("Almond Granola", "Baked granola with almonds", ["Oats", "Almonds", "Honey", "Vegetable oil"], "Contains: Tree nuts.", "granola"),
+            ("Wheat Biscuits", "Whole wheat biscuit cereal", ["Whole wheat", "Salt", "Vitamins"], "Contains: Wheat.", "wheat biscuits"),
+        ],
+    ),
+]

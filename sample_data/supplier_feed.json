@@ -1,0 +1,66 @@
+{
+  "supplier": "Demo Foods Distribution",
+  "products": [
+    {
+      "item_code": "DFD-1001",
+      "title": "Kellogg's Corn Flakes 500g",
+      "manufacturer": "Kellogg's",
+      "product_category": "Breakfast Cereals",
+      "desc": "Crispy golden flakes of corn, toasted to perfection and fortified with iron and B vitamins. A simple, wholesome start to the day with milk or yogurt.",
+      "net_weight": "500 gm",
+      "ingredient_list": ["Corn", "Sugar", "Malt Extract", "Salt", "Iron", "Vitamin B6"],
+      "image": "https://supplier.example.com/img/dfd-1001.jpg",
+      "price": "$3.99",
+      "origin": "USA"
+    },
+    {
+      "item_code": "DFD-1002",
+      "title": "quaker oats",
+      "manufacturer": "Quaker",
+      "product_category": "cereal",
+      "desc": "healthy oats",
+      "net_weight": "1",
+      "ingredient_list": "oats",
+      "price": "2.5"
+    },
+    {
+      "item_code": "DFD-1003",
+      "title": "Nescafe Classic Instant Coffee 100g",
+      "manufacturer": "Nescafe",
+      "product_category": "Instant Coffee",
+      "desc": "A rich, full-flavoured instant coffee made from carefully selected beans, ready in seconds for a smooth cup any time of day.",
+      "net_weight": "100g",
+      "ingredient_list": "Instant Coffee",
+      "image": "https://supplier.example.com/img/dfd-1003.jpg",
+      "price": "5.49",
+      "origin": "Switzerland"
+    },
+    {
+      "item_code": "DFD-1004",
+      "title": "Dove Beauty Bar 100g",
+      "manufacturer": "Dove",
+      "product_category": "Personal Care",
+      "desc": "Gentle cleansing bar with quarter moisturising cream that leaves skin soft and smooth.",
+      "net_weight": "100g",
+      "ingredient_list": "Sodium Lauroyl Isethionate, Stearic Acid, Sodium Tallowate, Water, Fragrance",
+      "image": "https://supplier.example.com/img/dfd-1004.jpg",
+      "price": 1.99,
+      "origin": "India"
+    },
+    {
+      "title": "mystery product with no code"
+    },
+    {
+      "item_code": "DFD-1006",
+      "title": "Lays Classic Salted Potato Chips 150g",
+      "manufacturer": "Lays",
+      "product_category": "Savoury Snacks",
+      "desc": "Thin, crispy potato slices cooked until golden and seasoned with just the right amount of salt. The classic chip for every occasion, from picnics to movie nights.",
+      "net_weight": "150g",
+      "ingredient_list": "Potatoes, Vegetable Oil, Salt",
+      "image": "https://supplier.example.com/img/dfd-1006.jpg",
+      "price": "2.29",
+      "origin": "USA"
+    }
+  ]
+}
