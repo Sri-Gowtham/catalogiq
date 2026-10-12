@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { get, post } from '@/api/http'
 import type { ProductDetail, ReviewItem } from '@/api/types'
@@ -43,6 +43,29 @@ export function Review() {
 
   const open = data?.find((r) => r.id === openId) ?? data?.[0]
 
+  // Keyboard: J/K or arrows move through the list, A approves, R rejects, X ticks the current item.
+  useEffect(() => {
+    if (!data?.length) return
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (e.metaKey || e.ctrlKey || e.altKey || t?.closest('input, textarea, select, [contenteditable], dialog')) return
+      const i = Math.max(0, data.findIndex((r) => r.id === (open?.id ?? -1)))
+      const k = e.key.toLowerCase()
+      if (k === 'j' || k === 'arrowdown') setOpenId(data[Math.min(i + 1, data.length - 1)].id)
+      else if (k === 'k' || k === 'arrowup') setOpenId(data[Math.max(i - 1, 0)].id)
+      else if (!canWrite || status !== 'pending' || !open) return
+      else if (k === 'x') setSelected((cur) => (cur.includes(open.id) ? cur.filter((x) => x !== open.id) : [...cur, open.id]))
+      else if (k === 'a') resolve.mutate({ id: open.id, action: 'approve' })
+      else if (k === 'r') {
+        if (window.confirm('Reject this record and return it to the supplier?')) resolve.mutate({ id: open.id, action: 'reject' })
+      }
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
   return (
     <>
       <PageHeader
@@ -63,6 +86,12 @@ export function Review() {
           />
         }
       />
+      {canWrite && status === 'pending' && (
+        <p className="mb-3 hidden text-xs text-muted-foreground md:block">
+          Keys: <kbd className="rounded border px-1">J</kbd> <kbd className="rounded border px-1">K</kbd> move, <kbd className="rounded border px-1">A</kbd> approve,{' '}
+          <kbd className="rounded border px-1">R</kbd> reject, <kbd className="rounded border px-1">X</kbd> select
+        </p>
+      )}
       {isPending ? (
         <Loading className="h-96" />
       ) : error ? (

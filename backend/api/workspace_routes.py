@@ -17,6 +17,9 @@ router = APIRouter(prefix="/api", tags=["workspace"])
 class OnboardingIn(BaseModel):
     platforms: list[str] = Field(default_factory=list)
     load_demo_data: bool = False
+    industry: str | None = Field(default=None, max_length=60)
+    sku_range: str | None = Field(default=None, max_length=30)
+    rule_regions: list[Literal["ALL", "IN", "AE", "US"]] = Field(default_factory=list)
 
 
 @router.post("/workspace/onboarding")
@@ -34,6 +37,16 @@ def onboarding(body: OnboardingIn, p: Principal = Depends(admin_only), db=Depend
                 db.execute("INSERT INTO platforms (workspace_id, key, name, kind, region, status, connected_at, rules) VALUES (?, ?, ?, ?, ?, 'connected', ?, ?)",
                            (p.workspace_id, plat["key"], plat["name"], plat["kind"], plat["region"], now(), dumps(plat["rules"])))
         db.execute("UPDATE workspaces SET onboarded = 1 WHERE id = ?", (p.workspace_id,))
+        if body.industry or body.sku_range:
+            db.execute("UPDATE workspaces SET industry = COALESCE(?, industry), sku_range = COALESCE(?, sku_range) WHERE id = ?", (body.industry, body.sku_range, p.workspace_id))
+        # starter brand rules: the generic claim rules for the chosen regions (a brand's own trademark rule is never copied)
+        if body.rule_regions and not db.execute("SELECT 1 FROM rules WHERE workspace_id = ? LIMIT 1", (p.workspace_id,)).fetchone():
+            from seed.catalog_data import RULES
+
+            for region, kind, value, note in RULES:
+                if region in body.rule_regions and kind != "trademark":
+                    db.execute("INSERT INTO rules (workspace_id, region, kind, value, note) VALUES (?, ?, ?, ?, ?)", (p.workspace_id, region, kind, value, note))
+            audit(db, p.workspace_id, p.user_id, "Added starter brand rules", ", ".join(body.rule_regions))
     return {"ok": True, "demo_data": bool(body.load_demo_data and not has_products)}
 
 

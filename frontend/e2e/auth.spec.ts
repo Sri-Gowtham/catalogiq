@@ -38,7 +38,10 @@ test('signup, onboarding with an empty catalog, then the sample feed fills the w
   await page.fill('input[name=password]', 'Str0ngPass!')
   await page.click('button[type=submit]')
   await page.waitForURL('**/onboarding')
-  await page.getByRole('button', { name: 'Continue' }).click()
+  for (const step of ['Company', 'Platforms', 'Brand rules']) {
+    await expect(page.getByText(step, { exact: true }).first()).toBeVisible()
+    await page.getByRole('button', { name: 'Continue' }).click()
+  }
   await page.getByText('Start empty').click()
   await page.getByRole('button', { name: 'Continue' }).click()
   await page.getByRole('button', { name: 'Open my workspace' }).click()

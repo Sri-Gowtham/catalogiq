@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, Inbox } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { raw } from '@/api/http'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -150,5 +150,33 @@ export function Logo({ className }: { className?: string }) {
       </span>
       CatalogIQ
     </span>
+  )
+}
+
+/** Larger view of an image in a native modal dialog: Escape closes it, focus is trapped and returned by the browser. */
+export function Lightbox({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
+  const ref = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const d = ref.current
+    if (!d) return
+    if (open && !d.open) d.showModal()
+    if (!open && d.open) d.close()
+  }, [open])
+  return (
+    <dialog
+      ref={ref}
+      aria-label={title}
+      onClose={onClose}
+      onClick={(e) => e.target === ref.current && onClose()}
+      className="m-auto w-[min(92vw,44rem)] rounded-2xl border bg-card p-4 shadow-2xl backdrop:bg-foreground/40"
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm font-semibold">{title}</p>
+        <button type="button" onClick={onClose} className="rounded-lg border px-2.5 py-1 text-sm hover:bg-muted">
+          Close
+        </button>
+      </div>
+      {open && children}
+    </dialog>
   )
 }

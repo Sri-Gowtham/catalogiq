@@ -193,3 +193,14 @@ def test_role_matrix_every_endpoint(client):
 def test_unauthenticated_requests_are_rejected_everywhere(client):
     for method, url, body, _ in _matrix(1, 1, 1, 1):
         assert client.request(method, url, json=body).status_code == 401, f"{method} {url}"
+
+
+def test_onboarding_saves_company_details_and_starter_rules(client):
+    h = _signup(client, "starter@other.example")
+    r = client.post("/api/workspace/onboarding", headers=h, json={"platforms": ["amazon_in"], "industry": "FMCG", "sku_range": "100-500", "rule_regions": ["ALL", "IN"]})
+    assert r.status_code == 200
+    ws = client.get("/api/workspace", headers=h).json()
+    assert ws["industry"] == "FMCG" and ws["sku_range"] == "100-500" and ws["onboarded"] is True
+    rules = client.get("/api/rules", headers=h).json()
+    assert {x["region"] for x in rules} == {"ALL", "IN"}
+    assert all(x["kind"] != "trademark" for x in rules)

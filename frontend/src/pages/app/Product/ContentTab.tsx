@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Pencil } from 'lucide-react'
 import { useState } from 'react'
-import { patch } from '@/api/http'
+import { patch, post } from '@/api/http'
 import type { ContentOut, ProductDetail } from '@/api/types'
 import { DataTag, StateBadge } from '@/components/badges'
 import { AuthImage, Empty, fieldClass, Panel, Segmented } from '@/components/kit'
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { TabBar, panelId, tabId } from '@/components/TabBar'
 import { useToast } from '@/components/toast'
 import { useAuth } from '@/lib/auth'
+import { confirmDiscard, useUnsavedChanges } from '@/lib/unsaved'
 import { formatInr } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -72,7 +73,7 @@ export function ContentTab({ p }: { p: ProductDetail }) {
             variant="pill"
             items={p.content.map((x) => ({ key: x.platform_key, label: x.platform_name, badge: x.mandatory_missing.length > 0 ? <span className="size-1.5 rounded-full bg-flagged" role="img" aria-label="has missing fields" /> : undefined }))}
             value={c.platform_key}
-            onChange={setKey}
+            onChange={(k) => confirmDiscard() && setKey(k)}
           />
           <div role="tabpanel" id={panelId('platform', c.platform_key)} aria-labelledby={tabId('platform', c.platform_key)} className="grid gap-4 xl:grid-cols-[1fr_24rem]">
             <ContentEditor key={c.platform_key} p={p} c={c} />
@@ -96,6 +97,21 @@ function ContentEditor({ p, c }: { p: ProductDetail; c: ContentOut }) {
   const [title, setTitle] = useState(c.title)
   const [bullets, setBullets] = useState(c.bullets.join('\n'))
   const [desc, setDesc] = useState(c.description)
+  const dirty = editing && (title !== c.title || bullets !== c.bullets.join('\n') || desc !== c.description)
+  useUnsavedChanges(dirty)
+  const reset = () => {
+    setTitle(c.title)
+    setBullets(c.bullets.join('\n'))
+    setDesc(c.description)
+  }
+  const republish = useMutation({
+    mutationFn: () => post(`/products/${p.id}/publish`, { platforms: [c.platform_key] }),
+    onSuccess: () => {
+      toast.show(`${c.platform_name} changes published (simulated)`)
+      qc.invalidateQueries({ queryKey: ['product', String(p.id)] })
+    },
+    onError: (e) => toast.show(e.message, 'error'),
+  })
   const save = useMutation({
     mutationFn: () => patch(`/products/${p.id}/content/${c.platform_key}`, { title, bullets: bullets.split('\n').filter(Boolean), description: desc }),
     onSuccess: () => {
@@ -113,7 +129,21 @@ function ContentEditor({ p, c }: { p: ProductDetail; c: ContentOut }) {
         canWrite &&
         (editing ? (
           <div className="flex gap-2">
-            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+            {dirty && (
+              <Button size="sm" variant="ghost" onClick={reset}>
+                Reset
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                if (!dirty || window.confirm('Discard your changes?')) {
+                  reset()
+                  setEditing(false)
+                }
+              }}
+            >
               Cancel
             </Button>
             <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
@@ -127,6 +157,18 @@ function ContentEditor({ p, c }: { p: ProductDetail; c: ContentOut }) {
         ))
       }
     >
+      {c.status === 'draft' && c.listed && !editing && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-review/10 p-3 text-sm">
+          <p>
+            <strong className="font-medium">Unpublished changes.</strong> The live listing still shows the previous version.
+          </p>
+          {canWrite && (
+            <Button size="sm" onClick={() => republish.mutate()} disabled={republish.isPending}>
+              {republish.isPending ? 'Publishing…' : 'Publish changes'}
+            </Button>
+          )}
+        </div>
+      )}
       {save.error && (
         <p role="alert" className="mb-3 text-sm text-flagged">
           {save.error.message}

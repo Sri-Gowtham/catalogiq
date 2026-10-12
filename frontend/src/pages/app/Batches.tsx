@@ -6,7 +6,9 @@ import { get, post } from '@/api/http'
 import type { Batch, BatchDetail as BatchDetailData, ProductList } from '@/api/types'
 import { AuditBadge, DataTag, ModeBadge, ProductStatusBadge, ScorePill, StateBadge } from '@/components/badges'
 import { Empty, ErrorState, Kpi, Loading, PageHeader, Panel } from '@/components/kit'
+import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
+import { checkFeedFile, previewFeed, type FeedPreview } from '@/lib/feedPreview'
 import { useAuth } from '@/lib/auth'
 import { useTitle } from '@/lib/title'
 import { formatDateTime, formatMs, formatNum, layerName, STATUS_LABEL } from '@/lib/format'
@@ -26,53 +28,144 @@ function Progress({ b }: { b: Batch }) {
   )
 }
 
-function UploadControls() {
+function UploadArea() {
   const { canWrite } = useAuth()
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const toast = useToast()
   const input = useRef<HTMLInputElement>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<FeedPreview | null>(null)
+  const [problem, setProblem] = useState<string | null>(null)
+  const [over, setOver] = useState(false)
+
   const done = (r: { batch_id: number }) => {
+    setFile(null)
+    setPreview(null)
     qc.invalidateQueries()
     navigate(`/app/batches/${r.batch_id}`)
   }
   const upload = useMutation({
-    mutationFn: (file: File) => {
+    mutationFn: (f: File) => {
       const body = new FormData()
-      body.append('file', file)
+      body.append('file', f)
       return post<{ batch_id: number }>('/batches/upload', body)
     },
     onSuccess: done,
-    onError: (e) => setError(e.message),
+    onError: (e) => toast.show(e.message, 'error'),
   })
-  const sample = useMutation({ mutationFn: () => post<{ batch_id: number }>('/batches/sample'), onSuccess: done, onError: (e) => setError(e.message) })
+  const sample = useMutation({ mutationFn: () => post<{ batch_id: number }>('/batches/sample'), onSuccess: done, onError: (e) => toast.show(e.message, 'error') })
+
+  const choose = async (f: File | undefined) => {
+    if (!f) return
+    setFile(null)
+    setPreview(null)
+    const bad = checkFeedFile(f)
+    if (bad) return setProblem(bad)
+    try {
+      setPreview(await previewFeed(f))
+      setFile(f)
+      setProblem(null)
+    } catch (e) {
+      setProblem(e instanceof Error ? `Could not read this file: ${e.message}` : 'Could not read this file.')
+    }
+  }
+
   if (!canWrite) return null
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={() => sample.mutate()} disabled={sample.isPending}>
-          {sample.isPending ? 'Starting…' : 'Run sample feed'}
-        </Button>
-        <Button onClick={() => input.current?.click()} disabled={upload.isPending}>
-          <Upload className="size-4" /> {upload.isPending ? 'Uploading…' : 'Upload feed'}
-        </Button>
-        <input
-          ref={input}
-          type="file"
-          accept=".csv,.json"
-          className="sr-only"
-          aria-label="Supplier feed file"
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) upload.mutate(f)
-            e.target.value = ''
-          }}
-        />
+    <div className="mb-4 space-y-3">
+      <div
+        onDragOver={(e) => {
+          e.preventDefault()
+          setOver(true)
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setOver(false)
+          void choose(e.dataTransfer.files[0])
+        }}
+        className={cn('flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed p-4 transition-colors', over ? 'border-primary bg-primary/6' : 'bg-card')}
+      >
+        <div>
+          <p className="text-sm font-medium">Drop a supplier feed here</p>
+          <p className="text-xs text-muted-foreground">CSV or JSON, up to 5 MB. You will see the first rows before anything is processed.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => sample.mutate()} disabled={sample.isPending}>
+            {sample.isPending ? 'Starting…' : 'Run sample feed'}
+          </Button>
+          <Button onClick={() => input.current?.click()}>
+            <Upload className="size-4" /> Choose file
+          </Button>
+          <input
+            ref={input}
+            type="file"
+            accept=".csv,.json"
+            className="sr-only"
+            tabIndex={-1}
+            aria-label="Supplier feed file"
+            onChange={(e) => {
+              void choose(e.target.files?.[0])
+              e.target.value = ''
+            }}
+          />
+        </div>
       </div>
-      {error && (
-        <p role="alert" className="text-xs text-flagged">
-          {error}
+      {problem && (
+        <p role="alert" className="text-sm text-flagged">
+          {problem}
         </p>
+      )}
+      {file && preview && (
+        <Panel
+          title={`Preview: ${file.name}`}
+          action={
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFile(null)
+                  setPreview(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button size="sm" disabled={upload.isPending} onClick={() => upload.mutate(file)}>
+                {upload.isPending ? 'Uploading…' : `Process ${preview.total ?? ''} products`}
+              </Button>
+            </div>
+          }
+        >
+          <div tabIndex={0} className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="text-left text-muted-foreground">
+                <tr>
+                  {preview.columns.slice(0, 8).map((c) => (
+                    <th key={c} className="pr-4 pb-1.5 font-medium whitespace-nowrap">
+                      {c}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {preview.rows.map((r, i) => (
+                  <tr key={i}>
+                    {r.slice(0, 8).map((c, j) => (
+                      <td key={j} className="max-w-48 truncate py-1.5 pr-4">
+                        {c || <span className="text-flagged">empty</span>}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Showing {preview.rows.length} of {preview.total} rows{preview.columns.length > 8 ? `, first 8 of ${preview.columns.length} columns` : ''}. Rows with missing or unclear data are flagged by the audit, not rejected here.
+          </p>
+        </Panel>
       )}
     </div>
   )
@@ -89,8 +182,8 @@ export function Batches() {
       <PageHeader
         title="Batches"
         description="Supplier feeds, processed live by the agent workbench."
-        actions={<UploadControls />}
       />
+      <UploadArea />
       {isPending ? (
         <Loading className="h-96" />
       ) : error ? (

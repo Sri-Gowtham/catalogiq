@@ -10,6 +10,7 @@ import { TabBar, panelId, tabId } from '@/components/TabBar'
 import { useToast } from '@/components/toast'
 import { useAuth } from '@/lib/auth'
 import { useTitle } from '@/lib/title'
+import { confirmDiscard } from '@/lib/unsaved'
 import { formatInr } from '@/lib/format'
 import { OverviewTab } from './OverviewTab'
 import { ContentTab } from './ContentTab'
@@ -43,6 +44,7 @@ export function Product() {
 
   const demo = p.origin === 'demo'
   const setTab = (t: Tab) => {
+    if (!confirmDiscard()) return
     const next = new URLSearchParams(params)
     next.set('tab', t)
     setParams(next, { replace: true })

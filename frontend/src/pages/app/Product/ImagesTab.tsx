@@ -1,18 +1,22 @@
 import { Check, X } from 'lucide-react'
 import type { ProductDetail } from '@/api/types'
 import { DemoTag } from '@/components/badges'
-import { AuthImage, Panel } from '@/components/kit'
+import { useState } from 'react'
+import { AuthImage, Lightbox, Panel } from '@/components/kit'
 
 
 /* ------------------------------------------------------------------ images */
 export function ImagesTab({ p }: { p: ProductDetail }) {
+  const [zoom, setZoom] = useState<string | null>(null)
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_26rem]">
       <Panel title="Image set" tag={<DemoTag />}>
         <div className="grid gap-4 sm:grid-cols-3">
           {p.images.map((img) => (
             <figure key={img.kind}>
-              <AuthImage productId={p.id} kind={img.kind} alt={`${img.kind} image of ${p.name}`} className="aspect-square w-full border" />
+              <button type="button" onClick={() => setZoom(img.kind)} aria-label={`Enlarge ${img.kind} image`} className="block w-full cursor-zoom-in rounded-lg">
+                <AuthImage productId={p.id} kind={img.kind} alt={`${img.kind} image of ${p.name}`} className="aspect-square w-full border" />
+              </button>
               <figcaption className="mt-2 text-sm">
                 <span className="flex items-center justify-between">
                   <span className="font-medium capitalize">{img.kind}</span>
@@ -30,6 +34,9 @@ export function ImagesTab({ p }: { p: ProductDetail }) {
         </div>
         <p className="mt-4 text-xs text-muted-foreground">Illustrations for the demo brand. Real catalogs use brand photos.</p>
       </Panel>
+      <Lightbox open={zoom !== null} onClose={() => setZoom(null)} title={`${zoom ?? ''} image of ${p.name ?? p.sku}`}>
+        {zoom && <AuthImage productId={p.id} kind={zoom} alt={`${zoom} image of ${p.name}`} className="aspect-square w-full bg-white" />}
+      </Lightbox>
       <Panel title="Checks per platform">
         <div className="space-y-4">
           {p.image_reports.map((r) => (
