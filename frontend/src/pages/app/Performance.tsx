@@ -171,7 +171,7 @@ export function Performance() {
                         {l.name}
                       </Link>
                       <span className="block text-xs text-muted-foreground">{l.category}</span>
-                      {l.diagnosis && <span className="mt-1 block text-xs text-[oklch(0.5_0.12_70)] lg:hidden">{l.diagnosis}</span>}
+                      {l.diagnosis && <span className="mt-1 block text-xs text-warn lg:hidden">{l.diagnosis}</span>}
                     </td>
                     <td className="py-2.5">
                       <span className="flex flex-col items-start gap-1">

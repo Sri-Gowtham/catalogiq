@@ -295,11 +295,11 @@ function PreviewCard({ p, c }: { p: ProductDetail; c: ContentOut }) {
         <div className="min-w-0">
           <p className="line-clamp-3 text-sm leading-snug font-medium text-[oklch(0.42_0.12_240)]">{c.title}</p>
           {c.title_ar && (
-            <p dir="rtl" lang="ar" className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+            <p dir="rtl" lang="ar" className="mt-1 line-clamp-1 text-xs text-[oklch(0.45_0.02_250)]">
               {c.title_ar}
             </p>
           )}
-          <p className="mt-1 text-xs text-[oklch(0.65_0.15_70)]">★★★★☆ <span className="text-muted-foreground">sample</span></p>
+          <p className="mt-1 text-xs text-[oklch(0.55_0.15_70)]">★★★★☆ <span className="text-[oklch(0.45_0.02_250)]">sample</span></p>
           <p className="mt-1 text-lg font-semibold">{price}</p>
         </div>
       </div>

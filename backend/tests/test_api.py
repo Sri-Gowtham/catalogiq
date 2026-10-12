@@ -204,3 +204,12 @@ def test_onboarding_saves_company_details_and_starter_rules(client):
     rules = client.get("/api/rules", headers=h).json()
     assert {x["region"] for x in rules} == {"ALL", "IN"}
     assert all(x["kind"] != "trademark" for x in rules)
+
+
+def test_review_actions_are_logged_with_correct_spelling(client):
+    h = _login(client)
+    ids = [r["id"] for r in client.get("/api/review", headers=h).json()[:2]]
+    client.post(f"/api/review/{ids[0]}/resolve", headers=h, json={"action": "approve"})
+    client.post(f"/api/review/{ids[1]}/resolve", headers=h, json={"action": "reject"})
+    actions = {a["action"] for a in client.get("/api/audit-log", headers=h).json()}
+    assert {"Review approved", "Review rejected"} <= actions

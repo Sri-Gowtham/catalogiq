@@ -100,7 +100,7 @@ export function Rules() {
               <ul className="mt-2 space-y-1 text-sm">
                 {check.data.findings.map((f, i) => (
                   <li key={i} className="flex gap-2">
-                    <span className={f.severity === 'high' ? 'text-flagged' : 'text-[oklch(0.5_0.12_70)]'}>●</span>“{f.match}”: {f.message}
+                    <span className={f.severity === 'high' ? 'text-flagged' : 'text-warn'}>●</span>“{f.match}”: {f.message}
                   </li>
                 ))}
               </ul>

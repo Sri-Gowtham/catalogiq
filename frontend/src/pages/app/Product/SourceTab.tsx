@@ -22,7 +22,7 @@ function change(source: Record<string, unknown>, key: string, value: unknown): C
 
 const TAG: Record<Change, string> = {
   added: 'bg-primary/10 text-primary',
-  cleaned: 'bg-review/15 text-[oklch(0.5_0.12_70)]',
+  cleaned: 'bg-review/15 text-warn',
   same: 'bg-muted text-muted-foreground',
 }
 

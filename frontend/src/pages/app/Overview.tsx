@@ -347,7 +347,7 @@ function Task({ to, n, label, action, tone }: { to: string; n: number; label: st
       <span
         className={cn(
           'grid size-11 shrink-0 place-items-center rounded-xl text-lg font-semibold tabular-nums',
-          tone === 'flagged' ? 'bg-flagged/10 text-flagged' : tone === 'review' ? 'bg-review/15 text-[oklch(0.5_0.12_70)]' : 'bg-primary/10 text-primary',
+          tone === 'flagged' ? 'bg-flagged/10 text-flagged' : tone === 'review' ? 'bg-review/15 text-warn' : 'bg-primary/10 text-primary',
         )}
       >
         {n}

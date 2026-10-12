@@ -4,6 +4,7 @@ import { ArrowRight, Check, CircleAlert, FileSpreadsheet, Store, TrendingDown } 
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '@/components/kit'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { startDemo, useAuth } from '@/lib/auth'
 import { cn } from '@/lib/utils'
@@ -134,6 +135,7 @@ export function Landing() {
             <a href="#faq" className="hover:text-foreground">FAQ</a>
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle className="hidden sm:inline-flex" />
             {me ? (
               <Button nativeButton={false} render={<Link to="/app" />}>Open app</Button>
             ) : (

@@ -7,6 +7,13 @@
     <meta name="description" content="CatalogIQ: audit and enrich supplier product data before any AI is spent on it." />
     <meta name="theme-color" content="#f6f9fc" />
     <title>CatalogIQ</title>
+      <script>
+      // apply the saved theme before the page paints, so a dark choice never flashes white
+      try {
+        var t = localStorage.getItem('catalogiq.theme')
+        if (t === 'dark' || ((t !== 'light') && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark')
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

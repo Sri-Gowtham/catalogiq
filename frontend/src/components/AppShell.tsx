@@ -22,6 +22,7 @@ import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react
 import { get, post } from '@/api/http'
 import type { Notification, Overview, Role } from '@/api/types'
 import { Loading, Logo } from '@/components/kit'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { startDemo, useAuth } from '@/lib/auth'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -189,6 +190,10 @@ function UserMenu() {
             <p className="truncate text-sm font-medium">{me.email}</p>
             <p className="truncate text-xs text-muted-foreground">{me.workspace_name}</p>
           </div>
+          <div className="flex items-center justify-between px-2.5 py-1.5 text-sm">
+            <span>Theme</span>
+            <ThemeToggle />
+          </div>
           <Link to="/app/settings" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm hover:bg-muted">
             <Settings className="size-4" /> Settings
           </Link>
@@ -347,7 +352,7 @@ export function AppShell() {
 
       <div className="min-w-0">
         {me.is_demo && (
-          <aside aria-label="Demo notice" className="border-b bg-[oklch(0.97_0.03_75)] px-5 py-1.5 text-center text-xs text-[oklch(0.42_0.1_65)]">
+          <aside aria-label="Demo notice" className="border-b bg-notice px-5 py-1.5 text-center text-xs text-notice-foreground">
             <strong className="font-semibold">Demo workspace</strong> · sales and rankings are sample data
           </aside>
         )}

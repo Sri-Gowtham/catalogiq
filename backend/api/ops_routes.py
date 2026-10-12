@@ -121,7 +121,7 @@ def _resolve(db, p: Principal, item_id: int, action: str) -> bool:
     if action == "approve":  # a human override sends the product forward
         db.execute("UPDATE products SET status = 'ready' WHERE id = ?", (item["product_id"],))
     sku = db.execute("SELECT sku FROM products WHERE id = ?", (item["product_id"],)).fetchone()["sku"]
-    audit(db, p.workspace_id, p.user_id, f"Review {action}d", sku, item["reason"][:120])
+    audit(db, p.workspace_id, p.user_id, {"approve": "Review approved", "reject": "Review rejected"}[action], sku, item["reason"][:120])
     return True
 
 

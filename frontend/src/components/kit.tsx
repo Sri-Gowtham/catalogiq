@@ -38,7 +38,7 @@ export function Panel({ title, action, children, className, tag }: { title?: Rea
 }
 
 export function Kpi({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: 'pass' | 'review' | 'flagged' | 'primary' }) {
-  const toneClass = tone ? { pass: 'text-pass', review: 'text-[oklch(0.5_0.12_70)]', flagged: 'text-flagged', primary: 'text-primary' }[tone] : ''
+  const toneClass = tone ? { pass: 'text-pass', review: 'text-warn', flagged: 'text-flagged', primary: 'text-primary' }[tone] : ''
   return (
     <div className="surface p-4">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>

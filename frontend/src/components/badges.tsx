@@ -4,7 +4,7 @@ import { STATUS_LABEL } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 const pill = 'inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full px-2 text-[11px] font-medium whitespace-nowrap'
-const amberText = 'text-[oklch(0.5_0.12_70)]'
+const amberText = 'text-warn'
 
 const AUDIT: Record<AuditStatus, string> = {
   PASS: 'bg-pass/12 text-pass',
@@ -20,7 +20,7 @@ export function AuditBadge({ status, className }: { status: AuditStatus | null; 
 const PRODUCT: Record<string, string> = {
   live: 'bg-pass/12 text-pass',
   ready: 'bg-primary/10 text-primary',
-  upcoming: 'bg-[oklch(0.55_0.15_300)]/12 text-[oklch(0.48_0.15_300)]',
+  upcoming: 'bg-upcoming/12 text-upcoming',
   in_enrichment: `bg-review/15 ${amberText}`,
   flagged: 'bg-flagged/12 text-flagged',
   draft: 'bg-muted text-muted-foreground',
@@ -66,7 +66,7 @@ export function DataTag({ kind, className }: { kind: 'live' | 'simulated' | 'dem
   const styles = {
     live: 'bg-primary/10 text-primary',
     simulated: 'border border-dashed border-muted-foreground/45 text-muted-foreground',
-    demo: 'bg-[oklch(0.95_0.03_75)] text-[oklch(0.45_0.1_65)]',
+    demo: 'bg-notice text-notice-foreground',
   }[kind]
   const label = { live: 'Live', simulated: 'Simulated', demo: 'Demo data' }[kind]
   const title = {
