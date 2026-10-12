@@ -142,3 +142,54 @@ def test_admin_manages_team_and_new_role_applies(client):
 def test_manager_cannot_manage_team(client):
     h = _login(client, "manager@acmefoods.example")
     assert client.post("/api/team", headers=h, json={"name": "X Y", "email": "x@y.example", "role": "viewer"}).status_code == 403
+
+
+# ------------------------------------------------------------------ role matrix
+ANY, STAFF, ADMIN = {"admin", "manager", "viewer"}, {"admin", "manager"}, {"admin"}
+
+
+def _matrix(pid, lid, rule_id, uid):
+    """(method, url, json, roles allowed). Anything outside `allowed` must answer 403, anything inside must not."""
+    return [
+        ("GET", "/api/auth/me", None, ANY), ("GET", "/api/overview", None, ANY), ("GET", "/api/products?limit=1", None, ANY), ("GET", "/api/products/facets", None, ANY),
+        ("GET", f"/api/products/{pid}", None, ANY), ("GET", f"/api/products/{pid}/performance", None, ANY), ("GET", f"/api/products/{pid}/image/front.svg", None, ANY),
+        ("GET", "/api/platforms", None, ANY), ("GET", "/api/platforms/coverage", None, ANY), ("GET", "/api/performance/summary", None, ANY),
+        ("GET", "/api/performance/listings", None, ANY), ("GET", "/api/performance/ab-tests", None, ANY), ("GET", "/api/reports/summary", None, ANY),
+        ("GET", "/api/team", None, ANY), ("GET", "/api/notifications", None, ANY), ("POST", "/api/notifications/read", None, ANY), ("GET", "/api/workspace", None, ANY),
+        ("GET", "/api/batches", None, STAFF), ("GET", "/api/batches/1", None, STAFF), ("GET", "/api/review", None, STAFF), ("GET", "/api/publishing", None, STAFF),
+        ("GET", "/api/rules", None, STAFF), ("POST", "/api/rules/test", {"text": "hello"}, STAFF), ("GET", "/api/workbench", None, STAFF), ("GET", "/api/audit-log", None, STAFF),
+        ("PATCH", f"/api/products/{pid}/content/amazon_in", {"title": "Acme test title"}, STAFF),
+        ("POST", f"/api/products/{pid}/publish", {"platforms": ["amazon_in"]}, STAFF),
+        ("POST", f"/api/listings/{lid}/reoptimize", None, STAFF),
+        ("POST", "/api/batches/sample", None, STAFF),
+        ("POST", "/api/review/bulk", {"ids": [1], "action": "approve"}, STAFF), ("POST", "/api/review/1/resolve", {"action": "approve"}, STAFF),
+        ("POST", "/api/rules", {"region": "ALL", "kind": "restricted_claim", "value": "role test claim"}, ADMIN),
+        ("DELETE", f"/api/rules/{rule_id}", None, ADMIN),
+        ("POST", "/api/platforms/amazon_in/status", {"status": "connected"}, ADMIN),
+        ("POST", "/api/team", {"name": "Role Probe", "email": "probe@acmefoods.example", "role": "viewer"}, ADMIN),
+        ("PATCH", f"/api/team/{uid}", {"role": "viewer"}, ADMIN), ("DELETE", f"/api/team/{uid}", None, ADMIN),
+        ("POST", "/api/workspace/onboarding", {"platforms": [], "load_demo_data": False}, ADMIN),
+    ]
+
+
+def test_role_matrix_every_endpoint(client):
+    tokens = {r: _login(client, f"{'demo' if r == 'admin' else r}@acmefoods.example") for r in ("viewer", "manager", "admin")}
+    admin = tokens["admin"]
+    pid = client.get("/api/products?status=live&limit=1", headers=admin).json()["items"][0]["id"]
+    lid = client.get(f"/api/products/{pid}", headers=admin).json()["listings"][0]["id"]
+    rule_id = client.get("/api/rules", headers=admin).json()[0]["id"]
+    uid = client.post("/api/team", headers=admin, json={"name": "Spare Member", "email": "spare@acmefoods.example", "role": "viewer"}).json()["id"]
+
+    failures = []
+    for method, url, body, allowed in _matrix(pid, lid, rule_id, uid):
+        for role in ("viewer", "manager", "admin"):  # admin last so destructive calls cannot hide a denial
+            r = client.request(method, url, headers=tokens[role], json=body)
+            ok = r.status_code not in (401, 403) if role in allowed else r.status_code == 403
+            if not ok:
+                failures.append(f"{role} {method} {url} -> {r.status_code}, expected {'allowed' if role in allowed else '403'}")
+    assert not failures, "\n".join(failures)
+
+
+def test_unauthenticated_requests_are_rejected_everywhere(client):
+    for method, url, body, _ in _matrix(1, 1, 1, 1):
+        assert client.request(method, url, json=body).status_code == 401, f"{method} {url}"

@@ -22,14 +22,14 @@ def _batch(r, progress_total: int) -> dict:
 
 
 @router.get("/batches")
-def list_batches(p: Principal = Depends(current_principal), db=Depends(get_db)):
+def list_batches(p: Principal = Depends(can_write), db=Depends(get_db)):
     sync_live_batches(db, p.workspace_id)
     n = len(pipeline_agents())
     return [_batch(r, n) for r in db.execute("SELECT * FROM batches WHERE workspace_id = ? ORDER BY id DESC", (p.workspace_id,)).fetchall()]
 
 
 @router.get("/batches/{batch_id}")
-def batch_detail(batch_id: int, p: Principal = Depends(current_principal), db=Depends(get_db)):
+def batch_detail(batch_id: int, p: Principal = Depends(can_write), db=Depends(get_db)):
     sync_live_batches(db, p.workspace_id)
     r = db.execute("SELECT * FROM batches WHERE id = ? AND workspace_id = ?", (batch_id, p.workspace_id)).fetchone()
     if r is None:
@@ -84,7 +84,7 @@ def sample_batch(p: Principal = Depends(can_write), db=Depends(get_db)):
 
 # ----------------------------------------------------------------- review queue
 @router.get("/review")
-def review_list(status: Literal["pending", "resolved", "all"] = "pending", p: Principal = Depends(current_principal), db=Depends(get_db)):
+def review_list(status: Literal["pending", "resolved", "all"] = "pending", p: Principal = Depends(can_write), db=Depends(get_db)):
     sync_live_batches(db, p.workspace_id)
     cond = {"pending": "AND r.status = 'pending'", "resolved": "AND r.status != 'pending'", "all": ""}[status]
     rows = db.execute(
@@ -172,7 +172,7 @@ def set_platform_status(key: str, body: PlatformStatusIn, p: Principal = Depends
 
 
 @router.get("/publishing")
-def publishing(p: Principal = Depends(current_principal), db=Depends(get_db)):
+def publishing(p: Principal = Depends(can_write), db=Depends(get_db)):
     base = ("SELECT l.id, l.platform_key, l.status, l.published_at, l.rank, pl.name AS platform_name, p.id AS product_id, p.sku, p.name, p.quality_score "
             "FROM listings l JOIN products p ON p.id = l.product_id JOIN platforms pl ON pl.key = l.platform_key AND pl.workspace_id = p.workspace_id WHERE p.workspace_id = ? ")
     row = lambda r: dict(id=r["id"], platform_key=r["platform_key"], platform_name=r["platform_name"], status=r["status"], date=r["published_at"], product_id=r["product_id"], sku=r["sku"],

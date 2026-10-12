@@ -108,7 +108,7 @@ class RuleTestIn(BaseModel):
 
 
 @router.get("/rules")
-def list_rules(p: Principal = Depends(current_principal), db=Depends(get_db)):
+def list_rules(p: Principal = Depends(can_write), db=Depends(get_db)):
     rows = db.execute("SELECT * FROM rules WHERE workspace_id = ? ORDER BY region, kind, id", (p.workspace_id,)).fetchall()
     return [dict(id=r["id"], region=r["region"], kind=r["kind"], value=r["value"], note=r["note"]) for r in rows]
 
@@ -130,7 +130,7 @@ def delete_rule(rule_id: int, p: Principal = Depends(admin_only), db=Depends(get
 
 
 @router.post("/rules/test")
-def test_rules(body: RuleTestIn, p: Principal = Depends(current_principal), db=Depends(get_db)):
+def test_rules(body: RuleTestIn, p: Principal = Depends(can_write), db=Depends(get_db)):
     """Check a piece of copy against the workspace's restricted-claim and trademark rules for a region."""
     rules = db.execute("SELECT * FROM rules WHERE workspace_id = ? AND region IN ('ALL', ?)", (p.workspace_id, body.region)).fetchall()
     findings = []
@@ -149,7 +149,7 @@ def test_rules(body: RuleTestIn, p: Principal = Depends(current_principal), db=D
 
 # ----------------------------------------------------------------- agent workbench
 @router.get("/workbench")
-def workbench(p: Principal = Depends(current_principal), db=Depends(get_db)):
+def workbench(p: Principal = Depends(can_write), db=Depends(get_db)):
     wb = get_workbench()
     agents = []
     for a in AGENTS:

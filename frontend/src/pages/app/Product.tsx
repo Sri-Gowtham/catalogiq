@@ -26,6 +26,7 @@ const TABS = [
 type Tab = (typeof TABS)[number]['key']
 
 export function Product() {
+  const { canWrite } = useAuth()
   const { id } = useParams()
   const [params, setParams] = useSearchParams()
   const tab = (TABS.some((t) => t.key === params.get('tab')) ? params.get('tab') : 'overview') as Tab
@@ -60,9 +61,13 @@ export function Product() {
             {p.batch_name && (
               <>
                 {' · '}
-                <Link to={`/app/batches/${p.batch_id}`} className="text-primary underline underline-offset-2">
-                  {p.batch_name}
-                </Link>
+                {canWrite ? (
+                  <Link to={`/app/batches/${p.batch_id}`} className="text-primary underline underline-offset-2">
+                    {p.batch_name}
+                  </Link>
+                ) : (
+                  p.batch_name
+                )}
               </>
             )}
           </p>
@@ -82,7 +87,7 @@ export function Product() {
             <p className="font-medium">{p.gate_blocked ? 'Blocked by the quality gate' : 'Waiting for review'}</p>
             <p className="text-muted-foreground">{p.gate_reason ?? p.review?.reason}</p>
           </div>
-          {p.review?.status === 'pending' && (
+          {p.review?.status === 'pending' && canWrite && (
             <Link to="/app/review" className="text-sm font-medium text-primary hover:underline">
               Open review queue
             </Link>

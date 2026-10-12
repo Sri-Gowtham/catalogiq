@@ -55,7 +55,7 @@ export function Overview() {
         <Link to="/app/catalog?status=ready" className="block rounded-xl transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring">
           <Kpi label="Ready to publish" value={formatNum(c.ready)} />
         </Link>
-        <Link to="/app/review" className="block rounded-xl transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring">
+        <Link to={staff ? "/app/review" : "/app/catalog?status=flagged"} className="block rounded-xl transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring">
           <Kpi label="Flagged" value={formatNum(c.flagged)} tone="flagged" />
         </Link>
       </div>
