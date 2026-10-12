@@ -5,6 +5,7 @@ import type { Coverage, Platform } from '@/api/types'
 import { DemoTag, StateBadge } from '@/components/badges'
 import { ErrorState, Loading, PageHeader, Panel } from '@/components/kit'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/toast'
 import { useAuth } from '@/lib/auth'
 import { formatInrCompact, formatNum, formatPct, PLATFORM_SHORT } from '@/lib/format'
 
@@ -13,11 +14,15 @@ const KIND = { marketplace: 'Marketplace', quick_commerce: 'Quick commerce', own
 export function Platforms() {
   const { isAdmin } = useAuth()
   const qc = useQueryClient()
+  const toast = useToast()
   const { data, error, isPending } = useQuery({ queryKey: ['platforms'], queryFn: () => get<Platform[]>('/platforms') })
   const { data: cov } = useQuery({ queryKey: ['coverage'], queryFn: () => get<Coverage>('/platforms/coverage') })
   const toggle = useMutation({
     mutationFn: ({ key, status }: { key: string; status: string }) => post(`/platforms/${key}/status`, { status }),
-    onSuccess: () => qc.invalidateQueries(),
+    onSuccess: (_, v) => {
+      toast.show(v.status === 'connected' ? 'Platform reconnected' : 'Platform disconnected')
+      qc.invalidateQueries()
+    },
   })
 
   if (isPending) return <Loading className="h-[70vh]" />
@@ -70,7 +75,7 @@ export function Platforms() {
                   size="sm"
                   variant="outline"
                   disabled={toggle.isPending}
-                  onClick={() => toggle.mutate({ key: p.key, status: p.status === 'disconnected' ? 'connected' : 'disconnected' })}
+                  onClick={() => (p.status === 'disconnected' || window.confirm(`Disconnect ${p.name}? Its listings stop syncing.`)) && toggle.mutate({ key: p.key, status: p.status === 'disconnected' ? 'connected' : 'disconnected' })}
                 >
                   {p.status === 'disconnected' ? 'Reconnect' : 'Disconnect'}
                 </Button>
@@ -82,7 +87,7 @@ export function Platforms() {
 
       {cov && cov.rows.length > 0 && (
         <Panel title="Coverage: live products by category and platform" className="mt-4">
-          <div className="overflow-x-auto">
+          <div tabIndex={0} className="overflow-x-auto">
             <table className="w-full min-w-[40rem] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>

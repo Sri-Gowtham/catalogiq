@@ -98,7 +98,7 @@ export function Batches() {
       ) : data.length === 0 ? (
         <Empty title="No batches yet">Upload a supplier feed (CSV or JSON) to start.</Empty>
       ) : (
-        <div className="surface overflow-x-auto p-0">
+        <div tabIndex={0} className="surface overflow-x-auto p-0">
           <table className="w-full min-w-[52rem] text-sm">
             <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
@@ -241,7 +241,7 @@ export function BatchDetail() {
           ) : products.items.length === 0 ? (
             <Empty title={active(b.status) ? 'Products appear when the run finishes' : 'No products'} />
           ) : (
-            <div className="max-h-[32rem] overflow-y-auto">
+            <div tabIndex={0} className="max-h-[32rem] overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-card text-left text-xs text-muted-foreground">
                   <tr>

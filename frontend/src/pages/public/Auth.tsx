@@ -10,9 +10,11 @@ function AuthFrame({ title, subtitle, children, footer }: { title: string; subti
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="flex flex-col px-6 py-8 sm:px-12">
-        <Link to="/" className="w-fit">
-          <Logo />
-        </Link>
+        <header>
+          <Link to="/" className="inline-block">
+            <Logo />
+          </Link>
+        </header>
         <main id="main" className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-10">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, Inbox } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { raw } from '@/api/http'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -79,24 +79,25 @@ export function Empty({ title, children }: { title: string; children?: ReactNode
   )
 }
 
-/** Product images need the Authorization header, so they are fetched and shown as object URLs. */
+/** Product images need the Authorization header, so they are fetched and shown from a data URL (nothing to revoke). */
 export function AuthImage({ productId, kind = 'front', alt, className }: { productId: number; kind?: string; alt: string; className?: string }) {
-  const { data: blob } = useQuery({
+  const { data: src } = useQuery({
     queryKey: ['image', productId, kind],
-    queryFn: async () => (await raw(`/products/${productId}/image/${kind}.svg`)).blob(),
+    queryFn: async () => {
+      const blob = await (await raw(`/products/${productId}/image/${kind}.svg`)).blob()
+      return new Promise<string>((resolve, reject) => {
+        const r = new FileReader()
+        r.onload = () => resolve(String(r.result))
+        r.onerror = () => reject(r.error)
+        r.readAsDataURL(blob)
+      })
+    },
     staleTime: Infinity,
     retry: false,
   })
-  const [url, setUrl] = useState<string | null>(null)
-  useEffect(() => {
-    if (!blob) return
-    const u = URL.createObjectURL(blob)
-    setUrl(u)
-    return () => URL.revokeObjectURL(u)
-  }, [blob])
   return (
     <div className={cn('overflow-hidden rounded-lg bg-muted', className)}>
-      {url ? <img src={url} alt={alt} className="size-full object-contain" /> : <span className="sr-only">{alt}</span>}
+      {src ? <img src={src} alt={alt} loading="lazy" decoding="async" className="size-full object-contain" /> : <span className="sr-only">{alt}</span>}
     </div>
   )
 }

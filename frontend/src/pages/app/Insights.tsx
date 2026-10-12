@@ -8,6 +8,7 @@ import type { AbTest, ListingRow, PerfSummary, Publishing as PublishingData, Rul
 import { DataTag, DemoTag, FlagBadge, ModeBadge, RankChange, StateBadge } from '@/components/badges'
 import { Empty, ErrorState, Field, fieldClass, Kpi, Loading, PageHeader, Panel, Segmented } from '@/components/kit'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/toast'
 import { useAuth } from '@/lib/auth'
 import { formatCompact, formatDay, formatInr, formatInrCompact, formatMs, formatNum, formatPct, layerName, PLATFORM_SHORT } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -49,7 +50,7 @@ export function Publishing() {
           {rows.length === 0 ? (
             <Empty title="Nothing here" />
           ) : (
-            <div className="max-h-[36rem] overflow-auto">
+            <div tabIndex={0} className="max-h-[36rem] overflow-auto">
               <table className="w-full min-w-[36rem] text-sm">
                 <thead className="sticky top-0 bg-card text-left text-xs text-muted-foreground">
                   <tr>
@@ -120,7 +121,15 @@ export function Performance() {
   const tests = useQuery({ queryKey: ['ab-tests'], queryFn: () => get<AbTest[]>('/performance/ab-tests') })
   const qc = useQueryClient()
   const { canWrite } = useAuth()
-  const fix = useMutation({ mutationFn: (id: number) => post(`/listings/${id}/reoptimize`), onSuccess: () => qc.invalidateQueries({ queryKey: ['ab-tests'] }) })
+  const toast = useToast()
+  const fix = useMutation({
+    mutationFn: (id: number) => post(`/listings/${id}/reoptimize`),
+    onSuccess: () => {
+      toast.show('A/B test started (simulated)')
+      qc.invalidateQueries({ queryKey: ['ab-tests'] })
+    },
+    onError: (e) => toast.show(e.message, 'error'),
+  })
 
   const set = (k: string, v: string) => {
     const n = new URLSearchParams(params)
@@ -186,7 +195,7 @@ export function Performance() {
             />
           }
         >
-          <div className="h-64">
+          <div className="h-64" role="img" aria-label={`Line chart of ${metric} over the last 30 days`}>
             <ResponsiveContainer>
               <LineChart data={s.series} margin={{ left: 0, right: 8, top: 4 }}>
                 <CartesianGrid vertical={false} stroke="var(--border)" />
@@ -207,7 +216,7 @@ export function Performance() {
           </div>
         </Panel>
         <Panel title="Revenue by category">
-          <div className="h-64">
+          <div className="h-64" role="img" aria-label={`Bar chart of revenue by category: ${s.by_category.map((c) => `${c.key} ${formatInrCompact(c.revenue)}`).join(', ')}`}>
             <ResponsiveContainer>
               <BarChart data={s.by_category} layout="vertical" margin={{ left: 0, right: 12 }}>
                 <XAxis type="number" hide />
@@ -228,7 +237,7 @@ export function Performance() {
         ) : listings.data.length === 0 ? (
           <Empty title="No listings here" />
         ) : (
-          <div className="overflow-x-auto">
+          <div tabIndex={0} className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
@@ -278,11 +287,6 @@ export function Performance() {
               </tbody>
             </table>
           </div>
-        )}
-        {fix.error && (
-          <p role="alert" className="mt-2 text-sm text-flagged">
-            {fix.error.message}
-          </p>
         )}
       </Panel>
 
@@ -338,15 +342,25 @@ const REGION_LABEL = { ALL: 'All regions', IN: 'India', AE: 'UAE', US: 'United S
 export function Rules() {
   const { isAdmin } = useAuth()
   const qc = useQueryClient()
+  const toast = useToast()
   const { data, error, isPending } = useQuery({ queryKey: ['rules'], queryFn: () => get<Rule[]>('/rules') })
   const [text, setText] = useState('Acme Dark Chocolate is a sugar free superfood that helps cure fatigue. Made with real cocoa.')
   const [region, setRegion] = useState<Rule['region']>('IN')
   const check = useMutation({ mutationFn: () => post<{ passed: boolean; findings: RuleFinding[]; rules_checked: number }>('/rules/test', { text, region }) })
   const add = useMutation({
     mutationFn: (body: Partial<Rule>) => post('/rules', body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['rules'] }),
+    onSuccess: () => {
+      toast.show('Rule added')
+      qc.invalidateQueries({ queryKey: ['rules'] })
+    },
   })
-  const remove = useMutation({ mutationFn: (id: number) => del(`/rules/${id}`), onSuccess: () => qc.invalidateQueries({ queryKey: ['rules'] }) })
+  const remove = useMutation({
+    mutationFn: (id: number) => del(`/rules/${id}`),
+    onSuccess: () => {
+      toast.show('Rule deleted')
+      qc.invalidateQueries({ queryKey: ['rules'] })
+    },
+  })
 
   const submitRule = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -419,7 +433,7 @@ export function Rules() {
           ) : error ? (
             <ErrorState error={error} />
           ) : (
-            <ul className="max-h-96 divide-y overflow-y-auto">
+            <ul tabIndex={0} className="max-h-96 divide-y overflow-y-auto">
               {data.map((r) => (
                 <li key={r.id} className="flex items-start gap-3 py-2 text-sm">
                   <span className="w-20 shrink-0 text-xs text-muted-foreground">{REGION_LABEL[r.region]}</span>
@@ -431,7 +445,7 @@ export function Rules() {
                     </span>
                   </span>
                   {isAdmin && (
-                    <button type="button" aria-label={`Delete rule ${r.value}`} onClick={() => remove.mutate(r.id)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-flagged">
+                    <button type="button" aria-label={`Delete rule ${r.value}`} onClick={() => window.confirm(`Delete the rule "${r.value}"?`) && remove.mutate(r.id)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-flagged">
                       <Trash2 className="size-4" />
                     </button>
                   )}
@@ -515,7 +529,7 @@ export function Workbench() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_26rem]">
         <Panel title="Agents">
-          <div className="overflow-x-auto">
+          <div tabIndex={0} className="overflow-x-auto">
             <table className="w-full min-w-[44rem] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
@@ -551,7 +565,7 @@ export function Workbench() {
           </div>
         </Panel>
         <Panel title="Recent runs" tag={<span className="text-xs text-muted-foreground">refreshes every 5 s</span>}>
-          <ul className="max-h-[36rem] divide-y overflow-y-auto">
+          <ul tabIndex={0} className="max-h-[36rem] divide-y overflow-y-auto">
             {data.recent_runs.map((r) => (
               <li key={r.id} className="py-2 text-sm">
                 <span className="flex items-center justify-between gap-2">

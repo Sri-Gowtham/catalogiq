@@ -70,9 +70,9 @@
     --border: oklch(0.93 0.01 250);
     --input: oklch(0.88 0.03 250);
     --ring: oklch(0.6 0.15 263);
-    --pass: oklch(0.55 0.14 155);
+    --pass: oklch(0.46 0.12 155);
     --review: oklch(0.68 0.15 75);
-    --flagged: oklch(0.57 0.2 25);
+    --flagged: oklch(0.5 0.19 25);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -136,6 +136,10 @@
     /* the sticky header must never cover a focused element */
     scroll-padding-top: 4.5rem;
     -webkit-tap-highlight-color: transparent;
+    }
+  :where(a, button, summary, [role=tab], [role=radio], select):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
     }
   h1, h2, h3 {
     text-wrap: balance;

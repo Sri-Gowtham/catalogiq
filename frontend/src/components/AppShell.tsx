@@ -68,7 +68,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         .filter((g) => g.items.length > 0)
         .map((group) => (
         <div key={group.label}>
-          <p className="px-2 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground/80 uppercase">{group.label}</p>
+          <p className="px-2 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{group.label}</p>
           <ul className="space-y-0.5">
             {group.items.map((item) => (
               <li key={item.to}>
@@ -173,15 +173,15 @@ function UserMenu() {
       <button
         type="button"
         aria-expanded={open}
-        aria-label="Account menu"
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2 rounded-lg p-1 pr-2 hover:bg-muted"
       >
-        <span className="grid size-7 place-items-center rounded-full bg-primary/12 text-xs font-semibold text-primary">{initials}</span>
+        <span aria-hidden className="grid size-7 place-items-center rounded-full bg-primary/12 text-xs font-semibold text-primary">{initials}</span>
         <span className="hidden text-left text-sm leading-tight sm:block">
           <span className="block font-medium">{me.name}</span>
           <span className="block text-xs text-muted-foreground capitalize">{me.role}</span>
         </span>
+        <span className="sr-only">, account menu</span>
       </button>
       {open && (
         <div className="surface absolute right-0 z-40 mt-2 w-60 p-1.5">
@@ -347,9 +347,9 @@ export function AppShell() {
 
       <div className="min-w-0">
         {me.is_demo && (
-          <div className="border-b bg-[oklch(0.97_0.03_75)] px-5 py-1.5 text-center text-xs text-[oklch(0.42_0.1_65)]">
+          <aside aria-label="Demo notice" className="border-b bg-[oklch(0.97_0.03_75)] px-5 py-1.5 text-center text-xs text-[oklch(0.42_0.1_65)]">
             <strong className="font-semibold">Demo workspace</strong> · sales and rankings are sample data
-          </div>
+          </aside>
         )}
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur sm:px-6">
           <button type="button" aria-label="Open menu" onClick={() => setMobileOpen(true)} className="grid size-9 place-items-center rounded-lg hover:bg-muted lg:hidden">

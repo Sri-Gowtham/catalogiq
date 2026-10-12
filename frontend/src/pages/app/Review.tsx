@@ -6,6 +6,7 @@ import type { ProductDetail, ReviewItem } from '@/api/types'
 import { AuditBadge, SeverityBadge, StateBadge } from '@/components/badges'
 import { AuthImage, Empty, ErrorState, Loading, PageHeader, Panel, Segmented } from '@/components/kit'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/toast'
 import { useAuth } from '@/lib/auth'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils'
 export function Review() {
   const { canWrite } = useAuth()
   const qc = useQueryClient()
+  const toast = useToast()
   const [status, setStatus] = useState<'pending' | 'resolved'>('pending')
   const [selected, setSelected] = useState<number[]>([])
   const [openId, setOpenId] = useState<number | null>(null)
@@ -22,8 +24,22 @@ export function Review() {
     setSelected([])
     qc.invalidateQueries()
   }
-  const resolve = useMutation({ mutationFn: ({ id, action }: { id: number; action: 'approve' | 'reject' }) => post(`/review/${id}/resolve`, { action }), onSuccess: done })
-  const bulk = useMutation({ mutationFn: (action: 'approve' | 'reject') => post('/review/bulk', { ids: selected, action }), onSuccess: done })
+  const resolve = useMutation({
+    mutationFn: ({ id, action }: { id: number; action: 'approve' | 'reject' }) => post(`/review/${id}/resolve`, { action }),
+    onSuccess: (_, v) => {
+      toast.show(v.action === 'approve' ? 'Approved and sent back for enrichment' : 'Rejected and returned to the supplier')
+      done()
+    },
+    onError: (e) => toast.show(e.message, 'error'),
+  })
+  const bulk = useMutation({
+    mutationFn: (action: 'approve' | 'reject') => post('/review/bulk', { ids: selected, action }),
+    onSuccess: (_, action) => {
+      toast.show(`${selected.length} item${selected.length === 1 ? '' : 's'} ${action === 'approve' ? 'approved' : 'rejected'}`)
+      done()
+    },
+    onError: (e) => toast.show(e.message, 'error'),
+  })
 
   const open = data?.find((r) => r.id === openId) ?? data?.[0]
 
@@ -71,7 +87,7 @@ export function Review() {
                   {selected.length} selected
                 </span>
                 <div className="ml-auto flex gap-2">
-                  <Button size="sm" variant="outline" disabled={!selected.length || bulk.isPending} onClick={() => bulk.mutate('reject')}>
+                  <Button size="sm" variant="outline" disabled={!selected.length || bulk.isPending} onClick={() => window.confirm(`Reject ${selected.length} item(s) and return them to the supplier?`) && bulk.mutate('reject')}>
                     Reject
                   </Button>
                   <Button size="sm" disabled={!selected.length || bulk.isPending} onClick={() => bulk.mutate('approve')}>
@@ -110,7 +126,7 @@ export function Review() {
               ))}
             </ul>
           </div>
-          {open && <ReviewDetail item={open} onResolve={(action) => resolve.mutate({ id: open.id, action })} busy={resolve.isPending} canWrite={canWrite} />}
+          {open && <ReviewDetail item={open} onResolve={(action) => (action === 'approve' || window.confirm('Reject this record and return it to the supplier?')) && resolve.mutate({ id: open.id, action })} busy={resolve.isPending} canWrite={canWrite} />}
         </div>
       )}
     </>

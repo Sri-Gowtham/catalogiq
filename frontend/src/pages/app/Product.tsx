@@ -8,6 +8,8 @@ import type { ContentOut, ListingPerformance, ProductDetail } from '@/api/types'
 import { AuditBadge, DataTag, DemoTag, FlagBadge, ProductStatusBadge, RankChange, SeverityBadge, StateBadge } from '@/components/badges'
 import { AuthImage, Empty, ErrorState, fieldClass, Loading, Panel, Segmented } from '@/components/kit'
 import { Button } from '@/components/ui/button'
+import { TabBar, panelId, tabId } from '@/components/TabBar'
+import { useToast } from '@/components/toast'
 import { useAuth } from '@/lib/auth'
 import { useTitle } from '@/lib/title'
 import { formatDay, formatInr, formatNum, formatPct } from '@/lib/format'
@@ -58,7 +60,7 @@ export function Product() {
             {p.batch_name && (
               <>
                 {' · '}
-                <Link to={`/app/batches/${p.batch_id}`} className="text-primary hover:underline">
+                <Link to={`/app/batches/${p.batch_id}`} className="text-primary underline underline-offset-2">
                   {p.batch_name}
                 </Link>
               </>
@@ -88,25 +90,9 @@ export function Product() {
         </div>
       )}
 
-      <div role="tablist" aria-label="Product sections" className="mb-5 flex gap-1 overflow-x-auto border-b">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            role="tab"
-            type="button"
-            aria-selected={tab === t.key}
-            onClick={() => setTab(t.key)}
-            className={cn(
-              '-mb-px border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
-              tab === t.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <TabBar label="Product sections" idPrefix="product" items={TABS.map((t) => ({ key: t.key, label: t.label }))} value={tab} onChange={setTab} />
 
-      <div role="tabpanel">
+      <div role="tabpanel" id={panelId('product', tab)} aria-labelledby={tabId('product', tab)}>
         {tab === 'overview' && <OverviewTab p={p} />}
         {tab === 'content' && <ContentTab p={p} />}
         {tab === 'images' && <ImagesTab p={p} />}
@@ -132,15 +118,15 @@ function Metric({ label, value, extra }: { label: string; value: number | null; 
 function PublishButton({ product }: { product: ProductDetail }) {
   const { canWrite } = useAuth()
   const qc = useQueryClient()
-  const [msg, setMsg] = useState<string | null>(null)
+  const toast = useToast()
   const targets = product.content.filter((c) => !product.listings.some((l) => l.platform_key === c.platform_key && l.status === 'live')).map((c) => c.platform_key)
   const m = useMutation({
     mutationFn: () => post<{ results: { platform: string; message: string }[] }>(`/products/${product.id}/publish`, { platforms: targets }),
     onSuccess: (r) => {
-      setMsg(`Published to ${r.results.length} platform(s). ${r.results[0]?.message ?? ''}`)
+      toast.show(`Published to ${r.results.length} platform${r.results.length === 1 ? '' : 's'} (simulated, no marketplace call)`)
       qc.invalidateQueries()
     },
-    onError: (e) => setMsg(e instanceof Error ? e.message : 'Publish failed'),
+    onError: (e) => toast.show(e instanceof Error ? e.message : 'Publish failed', 'error'),
   })
   if (!canWrite || targets.length === 0) return null
   const allowed = ['ready', 'upcoming', 'live'].includes(product.status) && (product.quality_score ?? 0) >= 70
@@ -149,11 +135,6 @@ function PublishButton({ product }: { product: ProductDetail }) {
       <Button disabled={!allowed || m.isPending} onClick={() => m.mutate()} title={allowed ? undefined : 'Only products that pass the quality gate can be published'}>
         {m.isPending ? 'Publishing…' : `Publish to ${targets.length} more`}
       </Button>
-      {msg && (
-        <p role="status" className="max-w-64 text-right text-xs text-muted-foreground">
-          {msg}
-        </p>
-      )}
     </div>
   )
 }
@@ -166,7 +147,7 @@ function OverviewTab({ p }: { p: ProductDetail }) {
         {p.listings.length === 0 ? (
           <Empty title="Not listed anywhere yet">Listings appear once the product is published.</Empty>
         ) : (
-          <div className="overflow-x-auto">
+          <div tabIndex={0} className="overflow-x-auto">
             <table className="w-full min-w-[36rem] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
@@ -210,7 +191,7 @@ function OverviewTab({ p }: { p: ProductDetail }) {
               .map((l) => (
                 <p key={l.id} className="rounded-lg bg-review/10 p-3 text-sm">
                   <strong className="font-medium">{l.platform_name}:</strong> {l.diagnosis}{' '}
-                  <Link to="?tab=performance" className="font-medium text-primary hover:underline">
+                  <Link to="?tab=performance" className="font-medium text-primary underline underline-offset-2">
                     See the fix
                   </Link>
                 </p>
@@ -294,25 +275,15 @@ function ContentTab({ p }: { p: ProductDetail }) {
         <CompareView p={p} />
       ) : (
         <>
-          <div role="tablist" aria-label="Platforms" className="mb-4 flex flex-wrap gap-2">
-            {p.content.map((x) => (
-              <button
-                key={x.platform_key}
-                type="button"
-                role="tab"
-                aria-selected={x.platform_key === c.platform_key}
-                onClick={() => setKey(x.platform_key)}
-                className={cn(
-                  'flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
-                  x.platform_key === c.platform_key ? 'border-primary bg-primary/6 text-primary' : 'bg-card hover:bg-muted',
-                )}
-              >
-                {x.platform_name}
-                {x.mandatory_missing.length > 0 && <span className="size-1.5 rounded-full bg-flagged" aria-label="has missing fields" />}
-              </button>
-            ))}
-          </div>
-          <div className="grid gap-4 xl:grid-cols-[1fr_24rem]">
+          <TabBar
+            label="Platforms"
+            idPrefix="platform"
+            variant="pill"
+            items={p.content.map((x) => ({ key: x.platform_key, label: x.platform_name, badge: x.mandatory_missing.length > 0 ? <span className="size-1.5 rounded-full bg-flagged" role="img" aria-label="has missing fields" /> : undefined }))}
+            value={c.platform_key}
+            onChange={setKey}
+          />
+          <div role="tabpanel" id={panelId('platform', c.platform_key)} aria-labelledby={tabId('platform', c.platform_key)} className="grid gap-4 xl:grid-cols-[1fr_24rem]">
             <ContentEditor key={c.platform_key} p={p} c={c} />
             <div>
               <p className="mb-2 text-xs font-medium text-muted-foreground">How it looks on a {c.kind === 'quick_commerce' ? 'quick-commerce app' : c.kind === 'own_site' ? 'brand store' : 'marketplace'}</p>
@@ -329,6 +300,7 @@ function ContentTab({ p }: { p: ProductDetail }) {
 function ContentEditor({ p, c }: { p: ProductDetail; c: ContentOut }) {
   const { canWrite } = useAuth()
   const qc = useQueryClient()
+  const toast = useToast()
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(c.title)
   const [bullets, setBullets] = useState(c.bullets.join('\n'))
@@ -336,6 +308,7 @@ function ContentEditor({ p, c }: { p: ProductDetail; c: ContentOut }) {
   const save = useMutation({
     mutationFn: () => patch(`/products/${p.id}/content/${c.platform_key}`, { title, bullets: bullets.split('\n').filter(Boolean), description: desc }),
     onSuccess: () => {
+      toast.show(`${c.platform_name} content saved`)
       setEditing(false)
       qc.invalidateQueries({ queryKey: ['product', String(p.id)] })
     },
@@ -510,7 +483,7 @@ function PreviewCard({ p, c }: { p: ProductDetail; c: ContentOut }) {
 
 function CompareView({ p }: { p: ProductDetail }) {
   return (
-    <div className="overflow-x-auto pb-2">
+    <div tabIndex={0} className="overflow-x-auto pb-2">
       <div className="grid min-w-[60rem] gap-3" style={{ gridTemplateColumns: `repeat(${p.content.length}, minmax(0, 1fr))` }}>
         {p.content.map((c) => (
           <div key={c.platform_key} className="surface flex flex-col p-4 text-sm">
@@ -732,7 +705,15 @@ function PerformanceTab({ p }: { p: ProductDetail }) {
   const qc = useQueryClient()
   const [metric, setMetric] = useState<'rank' | 'clicks' | 'orders'>('rank')
   const { data, isPending, error } = useQuery({ queryKey: ['product-perf', p.id], queryFn: () => get<ListingPerformance[]>(`/products/${p.id}/performance`) })
-  const test = useMutation({ mutationFn: (listingId: number) => post(`/listings/${listingId}/reoptimize`), onSuccess: () => qc.invalidateQueries() })
+  const toast = useToast()
+  const test = useMutation({
+    mutationFn: (listingId: number) => post(`/listings/${listingId}/reoptimize`),
+    onSuccess: () => {
+      toast.show('A/B test started (simulated)')
+      qc.invalidateQueries()
+    },
+    onError: (e) => toast.show(e.message, 'error'),
+  })
 
   if (isPending) return <Loading className="h-80" />
   if (error) return <ErrorState error={error} />
@@ -773,7 +754,7 @@ function PerformanceTab({ p }: { p: ProductDetail }) {
           />
         }
       >
-        <div className="h-72">
+        <div className="h-72" role="img" aria-label={`Line chart of ${metric} over the last 30 days for each platform`}>
           <ResponsiveContainer>
             <LineChart data={rows} margin={{ left: 0, right: 8, top: 4 }}>
               <CartesianGrid vertical={false} stroke="var(--border)" />

@@ -91,10 +91,10 @@ const FAQ = [
   { q: 'Are the prices final?', a: 'No. They are indicative prices for discussion while the product is being validated.' },
 ]
 
-function Screen({ src, alt, dark }: { src: string; alt: string; dark?: boolean }) {
+function Screen({ src, alt, dark, priority }: { src: string; alt: string; dark?: boolean; priority?: boolean }) {
   return (
     <figure className={cn('overflow-hidden rounded-2xl border p-1.5 shadow-[0_24px_60px_-20px_rgb(0_40_90/0.35)]', dark ? 'border-white/15 bg-white/5' : 'bg-card')}>
-      <img src={src} alt={alt} width={1860} height={1035} className="block w-full rounded-xl" loading="lazy" />
+      <img src={src} alt={alt} width={1860} height={1035} className="block w-full rounded-xl" loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} decoding="async" />
     </figure>
   )
 }
@@ -163,7 +163,7 @@ export function Landing() {
             </div>
           </div>
           <div className="reveal">
-            <Screen src="/screens/overview.png" alt="CatalogIQ overview dashboard with product counts, sales trend and items needing attention" />
+            <Screen priority src="/screens/overview.png" alt="CatalogIQ overview dashboard with product counts, sales trend and items needing attention" />
           </div>
         </section>
 

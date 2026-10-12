@@ -9,6 +9,7 @@ import { ErrorState, fieldClass, Kpi, Loading, PageHeader, Panel } from '@/compo
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
 import { formatDateTime, formatInr, formatNum } from '@/lib/format'
+import { useToast } from '@/components/toast'
 import { cn } from '@/lib/utils'
 
 export function Reports() {
@@ -113,7 +114,7 @@ export function Settings() {
           ) : log.error ? (
             <ErrorState error={log.error} />
           ) : (
-            <ul className="max-h-96 divide-y overflow-y-auto">
+            <ul tabIndex={0} className="max-h-96 divide-y overflow-y-auto">
               {log.data.map((r) => (
                 <li key={r.id} className="grid gap-1 py-2 text-sm sm:grid-cols-[10rem_1fr_10rem]">
                   <span className="text-xs text-muted-foreground">{formatDateTime(r.at)}</span>
@@ -142,6 +143,7 @@ const ROLE_TEXT: Record<Role, string> = {
 function TeamPanel() {
   const { me, isAdmin } = useAuth()
   const qc = useQueryClient()
+  const toast = useToast()
   const team = useQuery({ queryKey: ['team'], queryFn: () => get<Member[]>('/team') })
   const [invited, setInvited] = useState<{ email: string; password: string } | null>(null)
   const refresh = () => qc.invalidateQueries({ queryKey: ['team'] })
@@ -152,8 +154,20 @@ function TeamPanel() {
       refresh()
     },
   })
-  const setRole = useMutation({ mutationFn: ({ id, role }: { id: number; role: Role }) => patch(`/team/${id}`, { role }), onSuccess: refresh })
-  const remove = useMutation({ mutationFn: (id: number) => del(`/team/${id}`), onSuccess: refresh })
+  const setRole = useMutation({
+    mutationFn: ({ id, role }: { id: number; role: Role }) => patch(`/team/${id}`, { role }),
+    onSuccess: () => {
+      toast.show('Role updated')
+      refresh()
+    },
+  })
+  const remove = useMutation({
+    mutationFn: (id: number) => del(`/team/${id}`),
+    onSuccess: () => {
+      toast.show('Teammate removed')
+      refresh()
+    },
+  })
   const error = invite.error ?? setRole.error ?? remove.error
 
   const submit = (e: FormEvent<HTMLFormElement>) => {
@@ -194,7 +208,7 @@ function TeamPanel() {
                     <option value="manager">Manager</option>
                     <option value="viewer">Viewer</option>
                   </select>
-                  <button type="button" aria-label={`Remove ${m.name}`} onClick={() => remove.mutate(m.id)} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-flagged">
+                  <button type="button" aria-label={`Remove ${m.name}`} onClick={() => window.confirm(`Remove ${m.name} from this workspace?`) && remove.mutate(m.id)} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-flagged">
                     <Trash2 className="size-4" />
                   </button>
                 </>
