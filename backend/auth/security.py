@@ -63,3 +63,18 @@ class RateLimiter:
 
 
 login_limiter = RateLimiter()
+reset_limiter = RateLimiter()
+contact_limiter = RateLimiter()
+
+
+def set_session_cookie(response, token: str) -> None:
+    """The browser session lives in an httpOnly cookie, so page scripts can never read the token."""
+    response.set_cookie(config.COOKIE_NAME, token, max_age=config.TOKEN_TTL_HOURS * 3600, httponly=True, samesite="lax", secure=config.COOKIE_SECURE, path="/")
+
+
+def clear_session_cookie(response) -> None:
+    response.delete_cookie(config.COOKIE_NAME, path="/")
+
+
+def hash_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()

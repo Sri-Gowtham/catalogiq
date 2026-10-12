@@ -2,9 +2,10 @@
 from dataclasses import dataclass
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+import config
 from auth.security import decode_token
 from db.core import get_db
 
@@ -21,14 +22,20 @@ class Principal:
 
 
 def current_principal(
+    request: Request,
     creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
     db=Depends(get_db),
 ) -> Principal:
     unauthorised = HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in to continue", headers={"WWW-Authenticate": "Bearer"})
-    if creds is None:
+    cookie = request.cookies.get(config.COOKIE_NAME)
+    if creds is None and cookie is None:
         raise unauthorised
+    if creds is None and request.method not in ("GET", "HEAD", "OPTIONS") and request.headers.get(config.CSRF_HEADER) != config.CSRF_VALUE:
+        # a browser session may only change data from the web app, which sends this header on every request
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Missing request header")
+    token = creds.credentials if creds is not None else cookie
     try:
-        claims = decode_token(creds.credentials)
+        claims = decode_token(token)
     except jwt.PyJWTError:
         raise unauthorised from None
     row = db.execute(

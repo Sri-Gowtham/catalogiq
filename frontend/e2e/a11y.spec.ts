@@ -7,7 +7,7 @@ const scan = async (page: Page) =>
 
 test('public pages have no accessibility violations', async ({ page }) => {
   test.setTimeout(90_000)
-  for (const path of ['/', '/login', '/signup', '/contact']) {
+  for (const path of ['/', '/login', '/signup', '/contact', '/forgot-password', '/reset-password']) {
     await page.goto(path)
     await page.waitForLoadState('networkidle')
     expect(await scan(page), path).toEqual([])

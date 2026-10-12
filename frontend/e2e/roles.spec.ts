@@ -57,11 +57,10 @@ test('admin: controls are present, and the View-as switch changes the experience
   await expect(page.locator('nav[aria-label=Main] a')).toHaveCount(6)
 })
 
-test('the API refuses what the menu hides, even when called directly', async ({ page, request }) => {
+test('the API refuses what the menu hides, even when called directly', async ({ page }) => {
   await login(page, 'viewer')
-  const token = await page.evaluate(() => localStorage.getItem('catalogiq.token'))
   for (const url of ['/api/batches', '/api/review', '/api/publishing', '/api/rules', '/api/workbench', '/api/audit-log']) {
-    const res = await request.get(`http://127.0.0.1:8010${url}`, { headers: { Authorization: `Bearer ${token}` } })
+    const res = await page.context().request.get(`http://127.0.0.1:5173${url}`)
     expect(res.status(), url).toBe(403)
   }
 })

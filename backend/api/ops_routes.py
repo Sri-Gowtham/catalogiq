@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal
 
@@ -66,8 +67,17 @@ def _stage_file(workspace_id: int, ext: str, data: bytes) -> Path:
     return path
 
 
+def _check_upload_quota(db, workspace_id: int) -> None:
+    """A workspace may start at most `UPLOADS_PER_HOUR` feeds an hour, so one account cannot flood the workbench."""
+    since = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(timespec="seconds")
+    n = db.execute("SELECT COUNT(*) AS n FROM batches WHERE workspace_id = ? AND kind = 'live' AND created_at >= ?", (workspace_id, since)).fetchone()["n"]
+    if n >= config.UPLOADS_PER_HOUR:
+        raise HTTPException(429, f"Upload limit reached: {config.UPLOADS_PER_HOUR} feeds per hour. Try again later.")
+
+
 @router.post("/batches/upload", status_code=202)
 async def upload_batch(file: UploadFile = File(...), p: Principal = Depends(can_write), db=Depends(get_db)):
+    _check_upload_quota(db, p.workspace_id)
     name = Path(file.filename or "").name
     data = await file.read(config.MAX_UPLOAD_BYTES + 1)
     path = _stage_file(p.workspace_id, _check_upload(name, data), data)
@@ -77,6 +87,7 @@ async def upload_batch(file: UploadFile = File(...), p: Principal = Depends(can_
 @router.post("/batches/sample", status_code=202)
 def sample_batch(p: Principal = Depends(can_write), db=Depends(get_db)):
     """Run the bundled messy supplier feed (real ingestion and audit, simulated later stages)."""
+    _check_upload_quota(db, p.workspace_id)
     source = config.SAMPLE_DIR / "supplier_feed.csv"
     path = _stage_file(p.workspace_id, ".csv", source.read_bytes())
     return {"batch_id": start_feed_run(db, p.workspace_id, p.user_id, path, source.name)}

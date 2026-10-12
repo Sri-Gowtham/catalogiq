@@ -1,8 +1,10 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { post } from '@/api/http'
 import type { TokenOut } from '@/api/types'
 import { Field, fieldClass, Logo } from '@/components/kit'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { startDemo, useAuth } from '@/lib/auth'
 
@@ -35,6 +37,24 @@ function AuthFrame({ title, subtitle, children, footer }: { title: string; subti
         </ul>
       </aside>
     </div>
+  )
+}
+
+function PasswordInput({ name = 'password', autoComplete, minLength }: { name?: string; autoComplete: string; minLength?: number }) {
+  const [shown, setShown] = useState(false)
+  return (
+    <span className="relative block">
+      <input name={name} type={shown ? 'text' : 'password'} autoComplete={autoComplete} required minLength={minLength} className={cn(fieldClass, 'pr-10')} />
+      <button
+        type="button"
+        onClick={() => setShown((v) => !v)}
+        aria-pressed={shown}
+        aria-label={shown ? 'Hide password' : 'Show password'}
+        className="absolute inset-y-0 right-0 grid w-10 place-items-center text-muted-foreground hover:text-foreground"
+      >
+        {shown ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+      </button>
+    </span>
   )
 }
 
@@ -106,8 +126,13 @@ export function Login() {
           <input name="email" type="email" autoComplete="email" required spellCheck={false} className={fieldClass} placeholder="you@company.com" />
         </Field>
         <Field label="Password">
-          <input name="password" type="password" autoComplete="current-password" required className={fieldClass} />
+          <PasswordInput autoComplete="current-password" />
         </Field>
+        <p className="text-right text-sm">
+          <Link to="/forgot-password" className="text-primary underline underline-offset-2">
+            Forgot your password?
+          </Link>
+        </p>
         {error && (
           <p role="alert" className="text-sm text-flagged">
             {error}
@@ -176,7 +201,7 @@ export function Signup() {
           <input name="company" autoComplete="organization" required minLength={2} className={fieldClass} />
         </Field>
         <Field label="Password" hint="At least 8 characters.">
-          <input name="password" type="password" autoComplete="new-password" required minLength={8} className={fieldClass} />
+          <PasswordInput autoComplete="new-password" minLength={8} />
         </Field>
         {error && (
           <p role="alert" className="text-sm text-flagged">
@@ -193,22 +218,34 @@ export function Signup() {
 
 export function Contact() {
   const [sent, setSent] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   return (
-    <AuthFrame title="Talk to us" subtitle="Tell us about your catalog and we will set up a walkthrough." footer={<Link to="/" className="text-primary hover:underline">Back to home</Link>}>
+    <AuthFrame title="Talk to us" subtitle="Tell us about your catalog and we will set up a walkthrough." footer={<Link to="/" className="text-primary underline underline-offset-2">Back to home</Link>}>
       {sent ? (
         <p role="status" className="rounded-lg border bg-pass/8 p-4 text-sm">
-          Thanks. This is a prototype, so no message was sent. In the product, our team would reply within one working day.
+          Thanks, your request is saved. This is a prototype, so nobody is emailed yet; the team reads requests from the database.
         </p>
       ) : (
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault()
-            setSent(true)
+            const f = Object.fromEntries(new FormData(e.currentTarget))
+            setBusy(true)
+            setError(null)
+            try {
+              await post('/contact', { name: f.name, email: f.email, sku_range: f.skus, message: f.message || null })
+              setSent(true)
+            } catch (err) {
+              setError(err instanceof Error ? err.message : 'Could not send your request')
+            } finally {
+              setBusy(false)
+            }
           }}
           className="space-y-4"
         >
           <Field label="Name">
-            <input name="name" autoComplete="name" required className={fieldClass} />
+            <input name="name" autoComplete="name" required minLength={2} className={fieldClass} />
           </Field>
           <Field label="Work email">
             <input name="email" type="email" autoComplete="email" required spellCheck={false} className={fieldClass} />
@@ -221,8 +258,140 @@ export function Contact() {
               <option>More than 5,000</option>
             </select>
           </Field>
-          <Button type="submit" className="w-full">
-            Request a demo
+          <Field label="Anything we should know? (optional)">
+            <textarea name="message" rows={3} maxLength={1000} className={cn(fieldClass, 'h-auto py-2')} />
+          </Field>
+          {error && (
+            <p role="alert" className="text-sm text-flagged">
+              {error}
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={busy}>
+            {busy ? 'Sending…' : 'Request a demo'}
+          </Button>
+        </form>
+      )}
+    </AuthFrame>
+  )
+}
+
+export function ForgotPassword() {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<{ message: string; link?: string } | null>(null)
+  return (
+    <AuthFrame
+      title="Reset your password"
+      subtitle="Enter your work email and we will send a reset link."
+      footer={
+        <Link to="/login" className="text-primary underline underline-offset-2">
+          Back to log in
+        </Link>
+      }
+    >
+      {done ? (
+        <div role="status" className="space-y-3 rounded-lg border bg-pass/8 p-4 text-sm">
+          <p>{done.message}</p>
+          <p className="text-muted-foreground">Email delivery is not built in this prototype. The link is printed in the server log.</p>
+          {done.link && (
+            <p>
+              Local demo shortcut:{' '}
+              <Link to={done.link} className="font-medium text-primary underline underline-offset-2">
+                open the reset link
+              </Link>
+            </p>
+          )}
+        </div>
+      ) : (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            setBusy(true)
+            setError(null)
+            try {
+              const r = await post<{ message: string; reset_link?: string }>('/auth/forgot', { email: new FormData(e.currentTarget).get('email') })
+              setDone({ message: r.message, link: r.reset_link })
+            } catch (err) {
+              setError(err instanceof Error ? err.message : 'Could not send the link')
+            } finally {
+              setBusy(false)
+            }
+          }}
+          className="space-y-4"
+        >
+          <Field label="Work email">
+            <input name="email" type="email" autoComplete="email" required spellCheck={false} className={fieldClass} placeholder="you@company.com" />
+          </Field>
+          {error && (
+            <p role="alert" className="text-sm text-flagged">
+              {error}
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={busy}>
+            {busy ? 'Sending…' : 'Send reset link'}
+          </Button>
+        </form>
+      )}
+    </AuthFrame>
+  )
+}
+
+export function ResetPassword() {
+  const [params] = useSearchParams()
+  const token = params.get('token') ?? ''
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
+  return (
+    <AuthFrame
+      title="Choose a new password"
+      subtitle="At least 8 characters."
+      footer={
+        <Link to="/forgot-password" className="text-primary underline underline-offset-2">
+          Need a new link?
+        </Link>
+      }
+    >
+      {done ? (
+        <div role="status" className="space-y-3 rounded-lg border bg-pass/8 p-4 text-sm">
+          <p>Your password was changed.</p>
+          <Button className="w-full" onClick={() => navigate('/login')}>
+            Log in
+          </Button>
+        </div>
+      ) : (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            setBusy(true)
+            setError(null)
+            try {
+              await post('/auth/reset', { token, password: new FormData(e.currentTarget).get('password') })
+              setDone(true)
+            } catch (err) {
+              setError(err instanceof Error ? err.message : 'Could not change the password')
+            } finally {
+              setBusy(false)
+            }
+          }}
+          className="space-y-4"
+        >
+          <Field label="New password">
+            <PasswordInput autoComplete="new-password" minLength={8} />
+          </Field>
+          {!token && (
+            <p role="alert" className="text-sm text-flagged">
+              This page needs the link from your reset email.
+            </p>
+          )}
+          {error && (
+            <p role="alert" className="text-sm text-flagged">
+              {error}
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={busy || !token}>
+            {busy ? 'Saving…' : 'Change password'}
           </Button>
         </form>
       )}

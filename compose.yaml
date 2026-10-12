@@ -1,0 +1,12 @@
+services:
+  catalogiq:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - catalogiq-data:/data
+    restart: unless-stopped
+
+volumes:
+  catalogiq-data:

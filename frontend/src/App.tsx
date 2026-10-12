@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/AppShell'
 import { useRouteTitle } from '@/lib/title'
 import { NotFoundPage } from '@/pages/NotFoundPage'
-import { Contact, Login, Signup } from '@/pages/public/Auth'
+import { Contact, ForgotPassword, Login, ResetPassword, Signup } from '@/pages/public/Auth'
 import { Landing } from '@/pages/public/Landing'
 import { Onboarding } from '@/pages/public/Onboarding'
 
@@ -29,6 +29,8 @@ export default function App() {
       <Route path="login" element={<Login />} />
       <Route path="signup" element={<Signup />} />
       <Route path="contact" element={<Contact />} />
+      <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route path="reset-password" element={<ResetPassword />} />
       <Route path="onboarding" element={<Onboarding />} />
       <Route path="app" element={<AppShell />}>
         <Route index element={<Overview />} />

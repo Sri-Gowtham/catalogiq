@@ -1,28 +1,9 @@
-const TOKEN_KEY = 'catalogiq.token'
-
 export class ApiError extends Error {
   status: number
 
   constructor(status: number, message: string) {
     super(message)
     this.status = status
-  }
-}
-
-export function getToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_KEY)
-  } catch {
-    return null
-  }
-}
-
-export function setToken(token: string | null) {
-  try {
-    if (token) localStorage.setItem(TOKEN_KEY, token)
-    else localStorage.removeItem(TOKEN_KEY)
-  } catch {
-    // storage blocked: the session lasts until the tab closes
   }
 }
 
@@ -34,20 +15,26 @@ function describe(detail: unknown, fallback: string): string {
   return fallback
 }
 
-/** Called when the API rejects the token, so the app can return to the login page. */
+/** Called when the API rejects the session, so the app can return to the login page. */
 let onUnauthorized: () => void = () => {}
 export function setUnauthorizedHandler(fn: () => void) {
   onUnauthorized = fn
 }
 
+// A 401 from these means "wrong details", not "your session ended".
+const AUTH_PATHS = ['/auth/login', '/auth/signup', '/auth/demo', '/auth/forgot', '/auth/reset', '/auth/logout']
+
+/**
+ * The session lives in an httpOnly cookie that the browser sends by itself, so page scripts never hold a token.
+ * The custom header proves a write came from this app: other sites cannot add it without a CORS preflight.
+ */
 export async function raw(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers)
-  const token = getToken()
-  if (token) headers.set('Authorization', `Bearer ${token}`)
+  headers.set('X-Requested-With', 'catalogiq')
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   let res: Response
   try {
-    res = await fetch(`/api${path}`, { ...init, headers })
+    res = await fetch(`/api${path}`, { ...init, headers, credentials: 'same-origin' })
   } catch {
     throw new ApiError(0, 'Cannot reach the CatalogIQ API. Is the backend running on port 8000?')
   }
@@ -58,10 +45,7 @@ export async function raw(path: string, init: RequestInit = {}): Promise<Respons
     } catch {
       // body was not JSON; keep the status text
     }
-    if (res.status === 401 && token) {
-      setToken(null)
-      onUnauthorized()
-    }
+    if (res.status === 401 && !AUTH_PATHS.includes(path)) onUnauthorized()
     throw new ApiError(res.status, describe(detail, res.statusText))
   }
   return res

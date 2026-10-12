@@ -17,6 +17,8 @@ const TITLES: [string, string][] = [
   ['/login', 'Log in'],
   ['/signup', 'Create your workspace'],
   ['/contact', 'Talk to us'],
+  ['/forgot-password', 'Reset your password'],
+  ['/reset-password', 'Choose a new password'],
   ['/onboarding', 'Set up your workspace'],
 ]
 

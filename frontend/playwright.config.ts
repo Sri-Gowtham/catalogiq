@@ -26,7 +26,7 @@ export default defineConfig({
       command: `"${python}" -m uvicorn main:app --port 8010`,
       cwd: backend,
       url: 'http://127.0.0.1:8010/api/health',
-      env: { CATALOGIQ_DB: db, CATALOGIQ_JWT_SECRET: 'e2e-secret-not-for-production' },
+      env: { CATALOGIQ_DB: db, CATALOGIQ_JWT_SECRET: 'e2e-secret-not-for-production', CATALOGIQ_DEV_RESET_LINKS: '1' },
       reuseExistingServer: false,
       timeout: 60_000,
     },

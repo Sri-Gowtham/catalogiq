@@ -1,0 +1,13 @@
+.git
+.agents
+.claude
+docs
+output
+**/node_modules
+**/.venv
+**/__pycache__
+frontend/dist
+frontend/e2e
+frontend/test-results
+frontend/playwright-report
+.env
