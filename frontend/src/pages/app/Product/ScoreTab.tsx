@@ -14,17 +14,42 @@ const PARAMS: { key: string; label: string; max: number; note: string }[] = [
   { key: 'category', label: 'Category', max: 10, note: 'Specific category on each platform' },
 ]
 
+/* The agent workflow scores seven parts, out of 100 in total. */
+const FLOW_PARAMS: { key: string; label: string; max: number; note: string }[] = [
+  { key: 'identity', label: 'Identity', max: 20, note: 'Name, brand, size and country of origin present' },
+  { key: 'attributes', label: 'Attributes', max: 25, note: 'Category attributes extracted and filled' },
+  { key: 'description', label: 'Description', max: 20, note: 'Channel copy generated and long enough' },
+  { key: 'taxonomy', label: 'Taxonomy', max: 10, note: 'Mapped to a category path with confidence' },
+  { key: 'imagery', label: 'Imagery', max: 10, note: 'Image links present and valid' },
+  { key: 'compliance', label: 'Compliance', max: 10, note: 'Brand rules and restricted claims' },
+  { key: 'localization', label: 'Localisation', max: 5, note: 'Translated titles' },
+]
+
 export function ScoreTab({ p }: { p: ProductDetail }) {
   const d = p.score_detail
+  const fromWorkflow = !!d && 'identity' in d
+  const params = fromWorkflow ? FLOW_PARAMS : PARAMS
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-      <Panel title="Quality scorecard" tag={<DataTag kind="simulated" />}>
+      <Panel title="Quality scorecard" tag={<DataTag kind={fromWorkflow ? 'live' : 'simulated'} />}>
         {!d ? (
           <Empty title="Not scored yet">Products are scored after enrichment. Flagged records are never scored.</Empty>
         ) : (
           <ul className="space-y-4">
-            {PARAMS.map((x) => {
+            {params.map((x) => {
+              const notRun = fromWorkflow && d[x.key] === undefined // the workflow leaves out a part that did not run, rather than scoring it 0
               const v = d[x.key] ?? 0
+              if (notRun)
+                return (
+                  <li key={x.key}>
+                    <div className="mb-1 flex items-baseline justify-between text-sm">
+                      <span className="font-medium">{x.label}</span>
+                      <span className="text-muted-foreground">Not run</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted" />
+                    <p className="mt-1 text-xs text-muted-foreground">{x.note}. Left out of the total.</p>
+                  </li>
+                )
               return (
                 <li key={x.key}>
                   <div className="mb-1 flex items-baseline justify-between text-sm">

@@ -9,10 +9,15 @@ import config
 from auth.deps import Principal, admin_only, can_write, current_principal
 from db.core import audit, get_db, loads, now
 from pipeline.registry import AGENTS, pipeline_agents
+from workbench import get_workbench
 from workbench.importer import start_feed_run, sync_live_batches
 
 router = APIRouter(prefix="/api", tags=["operations"])
 AGENT_NAMES = {a.id: a.name for a in AGENTS}
+
+
+def _stage_total() -> int:
+    return getattr(get_workbench(), "stage_total", len(pipeline_agents()))
 
 
 # ----------------------------------------------------------------- batches
@@ -25,7 +30,7 @@ def _batch(r, progress_total: int) -> dict:
 @router.get("/batches")
 def list_batches(p: Principal = Depends(can_write), db=Depends(get_db)):
     sync_live_batches(db, p.workspace_id)
-    n = len(pipeline_agents())
+    n = _stage_total()
     return [_batch(r, n) for r in db.execute("SELECT * FROM batches WHERE workspace_id = ? ORDER BY id DESC", (p.workspace_id,)).fetchall()]
 
 
@@ -39,7 +44,7 @@ def batch_detail(batch_id: int, p: Principal = Depends(can_write), db=Depends(ge
     by_status = {x["status"]: x["n"] for x in db.execute("SELECT status, COUNT(*) AS n FROM products WHERE batch_id = ? GROUP BY status", (batch_id,)).fetchall()}
     layer = {a.id: a.layer for a in AGENTS}
     return dict(
-        batch=_batch(r, len(pipeline_agents())),
+        batch=_batch(r, _stage_total()),
         stages=[dict(agent_id=x["agent_id"], name=AGENT_NAMES.get(x["agent_id"], x["agent_id"]), layer=layer.get(x["agent_id"], 2), mode=x["mode"], status=x["status"], duration_ms=x["duration_ms"],
                      processed=x["processed"], skipped=x["skipped"], tokens=x["tokens"], note=x["note"]) for x in runs],
         product_status=by_status,

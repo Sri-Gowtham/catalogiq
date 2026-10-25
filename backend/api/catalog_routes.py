@@ -129,6 +129,10 @@ def product_detail(product_id: int, p: Principal = Depends(current_principal), d
             gate_reason = "Blocked by the brand rulebook: any compliance violation blocks publishing, whatever the total score."
         else:
             gate_reason = f"Blocked by the quality gate: score {r['quality_score']} is below 70."
+    gate = loads(r["enriched"], {}).get("gate")
+    if not gate_blocked and isinstance(gate, dict) and gate.get("publish_ready") is False:
+        gate_blocked = True
+        gate_reason = "Held by the agent workflow: " + (", ".join(str(g) for g in gate.get("gaps") or []) or "not publish-ready").replace("_", " ") + "."
     return ProductDetail(
         id=r["id"], sku=r["sku"], name=r["name"], brand=r["brand"], category=r["category"], line=r["line"], size=size_text(r["weight_value"], r["weight_unit"]) if r["weight_value"] is not None else None,
         price=r["price"], country=r["country"], status=r["status"], origin=r["origin"], launch_date=r["launch_date"], batch_id=r["batch_id"], batch_name=batch["name"] if batch else None,

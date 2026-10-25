@@ -102,7 +102,14 @@ pipeline: write its function, wrap it in `pipeline/adapters.py`, and replace its
 |---|---|---|
 | `CATALOGIQ_DB` | `output/catalogiq.db` | SQLite file |
 | `CATALOGIQ_JWT_SECRET` | generated into `output/.jwt_secret` | Signs sign-in cookies. **Required** in production |
-| `CATALOGIQ_WORKBENCH` | `local` | `remote` selects the SNS Square workbench adapter |
+| `CATALOGIQ_WORKBENCH` | `local` | `remote` sends feeds to the SNS n8n agent workflow through its webhook |
+| `CATALOGIQ_WORKBENCH_URL` | unset | Full webhook address. A secret: keep it in the environment, never in the repo |
+| `CATALOGIQ_WORKBENCH_KEY` | unset | Optional secret sent with every call once the workflow checks it. Header `X-CatalogIQ-Key` unless changed below |
+| `CATALOGIQ_WORKBENCH_KEY_HEADER` | `X-CatalogIQ-Key` | Header name, if the webhook expects another (for example `Authorization`) |
+| `CATALOGIQ_WORKBENCH_KEY_SCHEME` | unset | Optional prefix for the value, for example `Bearer` |
+| `CATALOGIQ_WORKBENCH_TIMEOUT` | `900` | Seconds to wait for each call; the webhook answers only when the last agent finishes |
+| `CATALOGIQ_WORKBENCH_RETRIES` | `1` | How many times a chunk is sent again when the workflow's model step produced no descriptions at all |
+| `CATALOGIQ_WORKBENCH_CHUNK` | `3` | Products per call. The workflow writes descriptions for 3 products at a time (about 35 s per call), so feeds are sent in chunks of 3 |
 | `CATALOGIQ_ENV` | unset | `production` refuses to start without a secret and turns demo logins off |
 | `CATALOGIQ_ENABLE_DEMO` | on, except in production | Seeds the Acme demo accounts, whose password is published here |
 | `CATALOGIQ_COOKIE_SECURE` | off | Set to `1` when served over https |
