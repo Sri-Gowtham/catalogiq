@@ -131,6 +131,15 @@ Put it behind https (a reverse proxy or your host's TLS) and keep `CATALOGIQ_COO
 (no Docker there); the same production mode was exercised by running the API directly with `CATALOGIQ_ENV=production`.
 Without Docker: `cd frontend; npm run build`, then run uvicorn from `backend` with the same environment variables.
 
+### Frontend on Vercel, backend elsewhere
+
+The site calls the API at `/api/...` and the sign-in cookie is `SameSite=Lax`, so the browser must see both as one address. Vercel does this by forwarding `/api` to the backend.
+
+1. Deploy the backend first (this repo's `Dockerfile`; `railway.json` is for Railway). Give it a persistent volume mounted at `/data`, one instance only, health check `/api/health`, and the environment variables in the table above (`CATALOGIQ_JWT_SECRET`, `CATALOGIQ_COOKIE_SECURE=1`).
+2. Put the backend's public address in `frontend/vercel.json` (replace `YOUR-BACKEND-HOST`), then commit.
+3. In Vercel import the repo with **Root Directory** `frontend` (framework Vite, build `npm run build`, output `dist`).
+4. Check `https://<your-site>/api/health`, then sign up and reload to confirm the session holds.
+
 ## Security notes
 
 - Sessions are an httpOnly, SameSite=Lax cookie; page scripts cannot read it and nothing is kept in browser storage.
