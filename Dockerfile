@@ -9,7 +9,8 @@ RUN npm run build
 FROM python:3.12-slim
 ENV PYTHONUNBUFFERED=1 \
     CATALOGIQ_ENV=production \
-    CATALOGIQ_DB=/data/catalogiq.db \n    CATALOGIQ_OUTPUT=/data/output
+    CATALOGIQ_DB=/data/catalogiq.db \
+    CATALOGIQ_OUTPUT=/data/output
 WORKDIR /app
 COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
