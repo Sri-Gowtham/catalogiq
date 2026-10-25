@@ -18,6 +18,10 @@ COPY backend/ backend/
 COPY sample_data/ sample_data/
 COPY --from=web /web/dist frontend/dist
 RUN useradd --create-home app && mkdir /data && chown app /data
+# Litestream copies the database to object storage (used only when LITESTREAM_BUCKET is set)
+RUN python -c "import urllib.request; urllib.request.urlretrieve('https://github.com/benbjohnson/litestream/releases/download/v0.3.13/litestream-v0.3.13-linux-amd64.deb', '/tmp/litestream.deb')" \
+    && dpkg -i /tmp/litestream.deb && rm /tmp/litestream.deb
+COPY litestream.yml /etc/litestream.yml
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 VOLUME /data

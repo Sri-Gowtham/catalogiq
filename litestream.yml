@@ -1,0 +1,13 @@
+# Copies the SQLite database to S3-compatible object storage (Backblaze B2, Cloudflare R2, Supabase Storage, AWS S3...).
+# Used only when LITESTREAM_BUCKET is set. Credentials come from LITESTREAM_ACCESS_KEY_ID and LITESTREAM_SECRET_ACCESS_KEY.
+dbs:
+  - path: /data/catalogiq.db
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: catalogiq
+        endpoint: ${LITESTREAM_ENDPOINT}
+        region: ${LITESTREAM_REGION}
+        force-path-style: true
+        sync-interval: 10s
+        retention: 72h

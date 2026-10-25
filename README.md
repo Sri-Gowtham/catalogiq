@@ -131,6 +131,21 @@ Put it behind https (a reverse proxy or your host's TLS) and keep `CATALOGIQ_COO
 (no Docker there); the same production mode was exercised by running the API directly with `CATALOGIQ_ENV=production`.
 Without Docker: `cd frontend; npm run build`, then run uvicorn from `backend` with the same environment variables.
 
+### Keeping the data on a host without a disk
+
+Free hosts have no persistent disk, so the SQLite file would be lost on every restart. Set `LITESTREAM_BUCKET` and the container
+restores the database from S3-compatible object storage at start and copies changes back every 10 seconds (Litestream, see
+`litestream.yml`). Without `LITESTREAM_BUCKET` nothing changes. The image has not been run with a real bucket on the machine this
+was written on, so check a restart once: sign up, restart the service, sign in again.
+
+| Variable | Meaning |
+|---|---|
+| `LITESTREAM_BUCKET` | Bucket name. Setting it turns the feature on |
+| `LITESTREAM_ENDPOINT` | The storage service's S3 address, for example `https://s3.us-west-004.backblazeb2.com` |
+| `LITESTREAM_REGION` | Region name of the bucket, for example `us-west-004` |
+| `LITESTREAM_ACCESS_KEY_ID` | Access key id (a key limited to this one bucket) |
+| `LITESTREAM_SECRET_ACCESS_KEY` | Its secret |
+
 ### Frontend on Vercel, backend elsewhere
 
 The site calls the API at `/api/...` and the sign-in cookie is `SameSite=Lax`, so the browser must see both as one address. Vercel does this by forwarding `/api` to the backend.
