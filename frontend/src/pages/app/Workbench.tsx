@@ -54,7 +54,7 @@ export function Workbench() {
       <div className="grid gap-4 xl:grid-cols-[1fr_26rem]">
         <Panel title="Agents">
           <div tabIndex={0} className="overflow-x-auto">
-            <table className="w-full min-w-[44rem] text-sm">
+            <table className="data w-full min-w-[44rem] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 font-medium">Agent</th>

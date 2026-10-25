@@ -1,5 +1,6 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowRight, Check, CircleAlert, FileSpreadsheet, Store, TrendingDown } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { startDemo, useAuth } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 
-gsap.registerPlugin(useGSAP)
+gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 function DemoButton({ className, label = 'View demo' }: { className?: string; label?: string }) {
   const { signIn } = useAuth()
@@ -109,7 +110,13 @@ export function Landing() {
       const mm = gsap.matchMedia()
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.from('.reveal', { y: 16, opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power2.out' })
-              })
+        // sections below the fold rise in as they arrive, so the page reads as a sequence
+        ScrollTrigger.batch('.sr', {
+          start: 'top 88%',
+          once: true,
+          onEnter: (els) => gsap.fromTo(els, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: 0.09, ease: 'power3.out', overwrite: true }),
+        })
+      })
       return () => mm.revert()
     },
     { scope: root },
@@ -151,9 +158,13 @@ export function Landing() {
       </header>
 
       <main id="main" tabIndex={-1} className="outline-none">
-        <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 pt-14 pb-20 lg:grid-cols-[1fr_1.1fr] lg:pt-20">
+        <div className="relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(60rem_26rem_at_75%_0%,color-mix(in_oklch,var(--primary)_14%,transparent),transparent_70%),radial-gradient(40rem_20rem_at_0%_10%,color-mix(in_oklch,var(--chart-3)_9%,transparent),transparent_70%)]" />
+        <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pt-14 pb-20 lg:grid-cols-[1fr_1.1fr] lg:pt-20">
           <div>
-            <h1 className="reveal text-4xl font-semibold tracking-tight sm:text-5xl lg:text-[2.7rem] lg:leading-[1.1]">Every product, ready for every shelf.</h1>
+            <h1 className="reveal text-4xl font-semibold tracking-tight sm:text-5xl lg:text-[3rem] lg:leading-[1.05]">
+              Every product, ready for <span className="text-primary">every shelf.</span>
+            </h1>
             <p className="reveal mt-5 max-w-lg text-lg text-muted-foreground">
               Audit supplier data, shape content for each marketplace, block weak listings, then track rank and sales.
             </p>
@@ -164,22 +175,29 @@ export function Landing() {
               <DemoButton />
             </div>
           </div>
-          <div className="reveal">
-            <Screen priority src="/screens/overview.png" alt="CatalogIQ overview dashboard with product counts, sales trend and items needing attention" />
+          <div className="reveal lg:[perspective:1600px]">
+            <div className="lg:[transform:rotateY(-6deg)_rotateX(2deg)] lg:origin-left">
+              <Screen priority src="/screens/overview.png" alt="CatalogIQ overview dashboard with product counts, sales trend and items needing attention" />
+            </div>
           </div>
         </section>
+        </div>
 
         <section className="border-y bg-card/60">
-          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[1fr_1.3fr]">
-            <h2 className="max-w-md text-2xl font-semibold tracking-tight sm:text-3xl">Five platforms means five versions of every product.</h2>
-            <ul className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
-              {PAINS.map((p) => (
-                <li key={p.title} className="flex gap-3">
-                  <p.icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-                  <div>
-                    <h3 className="font-semibold">{p.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{p.text}</p>
-                  </div>
+          <div className="mx-auto max-w-6xl px-5 py-20">
+            <h2 className="sr max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">Five platforms means five versions of every product.</h2>
+            <ul className="mt-10 grid gap-4 md:grid-cols-6">
+              {PAINS.map((p, i) => (
+                <li
+                  key={p.title}
+                  className={cn(
+                    'sr relative overflow-hidden rounded-2xl border p-6',
+                    ['md:col-span-4 bg-primary text-primary-foreground border-transparent', 'md:col-span-2 surface', 'md:col-span-2 surface', 'md:col-span-4 surface-wash surface-raised'][i],
+                  )}
+                >
+                  <p.icon className={cn('size-6', i === 0 ? 'text-primary-foreground/80' : 'text-primary')} aria-hidden />
+                  <h3 className="mt-6 text-lg font-semibold">{p.title}</h3>
+                  <p className={cn('mt-1.5 max-w-md text-sm', i === 0 ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{p.text}</p>
                 </li>
               ))}
             </ul>
@@ -187,19 +205,19 @@ export function Landing() {
         </section>
 
         <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">How it works</h2>
-          <ol className="mt-10 grid gap-8 border-t pt-8 md:grid-cols-4">
+          <h2 className="sr text-2xl font-semibold tracking-tight sm:text-3xl">How it works</h2>
+          <ol className="mt-10 grid gap-4 md:grid-cols-4">
             {STEPS.map((s) => (
-              <li key={s.n}>
-                <span className="font-mono text-sm text-primary">{s.n}</span>
-                <h3 className="mt-2 font-semibold">{s.title}</h3>
+              <li key={s.n} className="sr surface-raised relative p-5">
+                <span className="text-4xl font-semibold tracking-tight text-primary tabular-nums">{s.n}</span>
+                <h3 className="mt-3 font-semibold">{s.title}</h3>
                 <p className="mt-1.5 text-sm text-muted-foreground">{s.text}</p>
               </li>
             ))}
           </ol>
         </section>
 
-        <section className="bg-[oklch(0.25_0.04_255)] text-white">
+        <section className="bg-[oklch(0.24_0.045_165)] text-white">
           <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-20 lg:grid-cols-[0.7fr_1.3fr]">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">One record. A listing shaped for each shelf.</h2>
@@ -231,11 +249,11 @@ export function Landing() {
         </section>
 
         <section id="pricing" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Pricing</h2>
+          <h2 className="sr text-2xl font-semibold tracking-tight sm:text-3xl">Pricing</h2>
           <p className="mt-3 text-muted-foreground">Indicative prices in Indian rupees, excluding GST.</p>
           <div className="mt-10 grid gap-4 lg:grid-cols-3">
             {PLANS.map((plan) => (
-              <div key={plan.name} className={cn('surface flex flex-col p-6', plan.featured && 'ring-2 ring-primary')}>
+              <div key={plan.name} className={cn('sr flex flex-col p-6', plan.featured ? 'surface-raised surface-wash ring-2 ring-primary lg:-translate-y-2' : 'surface')}>
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">{plan.name}</h3>
                   {plan.featured && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Most chosen</span>}
@@ -279,7 +297,7 @@ export function Landing() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 py-20 text-center">
+        <section className="sr mx-auto max-w-6xl px-5 py-20 text-center">
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">See your catalog the way shoppers do.</h2>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button size="lg" nativeButton={false} render={<Link to="/signup" />}>

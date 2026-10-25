@@ -15,7 +15,7 @@ export function OverviewTab({ p }: { p: ProductDetail }) {
           <Empty title="Not listed anywhere yet">Listings appear once the product is published.</Empty>
         ) : (
           <div tabIndex={0} className="overflow-x-auto">
-            <table className="w-full min-w-[36rem] text-sm">
+            <table className="data w-full min-w-[36rem] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 font-medium">Platform</th>

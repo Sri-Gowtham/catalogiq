@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, Inbox } from 'lucide-react'
+import { AlertTriangle, Inbox, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { raw } from '@/api/http'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -20,9 +20,9 @@ export function PageHeader({ title, description, actions, tag }: { title: string
   )
 }
 
-export function Panel({ title, action, children, className, tag }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; tag?: ReactNode }) {
+export function Panel({ title, action, children, className, tag, lead }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; tag?: ReactNode; lead?: boolean }) {
   return (
-    <section className={cn('surface p-5', className)}>
+    <section className={cn(lead ? 'surface-raised surface-wash' : 'surface', 'p-5', className)}>
       {(title || action) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -37,13 +37,30 @@ export function Panel({ title, action, children, className, tag }: { title?: Rea
   )
 }
 
-export function Kpi({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: 'pass' | 'review' | 'flagged' | 'primary' }) {
-  const toneClass = tone ? { pass: 'text-pass', review: 'text-warn', flagged: 'text-flagged', primary: 'text-primary' }[tone] : ''
+/** Tiny trend line for a KPI tile; decorative, the number beside it carries the meaning. */
+export function Sparkline({ data, className }: { data: number[]; className?: string }) {
+  if (data.length < 2) return null
+  const min = Math.min(...data)
+  const span = Math.max(...data) - min || 1
+  const pts = data.map((v, i) => `${((i / (data.length - 1)) * 100).toFixed(1)},${(22 - ((v - min) / span) * 20).toFixed(1)}`)
   return (
-    <div className="surface p-4">
+    <svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden className={cn('h-6 w-full text-primary', className)}>
+      <polygon points={`0,24 ${pts.join(' ')} 100,24`} fill="currentColor" opacity="0.1" />
+      <polyline points={pts.join(' ')} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
+
+export function Kpi({ label, value, hint, tone, spark }: { label: string; value: ReactNode; hint?: ReactNode; tone?: 'pass' | 'review' | 'flagged' | 'primary'; spark?: number[] }) {
+  const toneClass = tone ? { pass: 'text-pass', review: 'text-warn', flagged: 'text-flagged', primary: 'text-primary' }[tone] : ''
+  const rail = tone ? { pass: 'bg-pass', review: 'bg-review', flagged: 'bg-flagged', primary: 'bg-primary' }[tone] : 'bg-border'
+  return (
+    <div className="surface relative overflow-hidden p-4 transition-shadow hover:shadow-[var(--shadow-raised)]">
+      <span aria-hidden className={cn('absolute inset-y-3 left-0 w-0.5 rounded-r-full', rail)} />
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className={cn('mt-1.5 text-2xl font-semibold tracking-tight tabular-nums', toneClass)}>{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+      {spark && <Sparkline data={spark} className="mt-2" />}
     </div>
   )
 }
@@ -69,12 +86,15 @@ export function ErrorState({ error }: { error: unknown }) {
   )
 }
 
-export function Empty({ title, children }: { title: string; children?: ReactNode }) {
+export function Empty({ title, children, icon: Icon = Inbox, action }: { title: string; children?: ReactNode; icon?: LucideIcon; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center">
-      <Inbox className="size-6 text-muted-foreground/60" aria-hidden />
+    <div className="surface-wash flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center">
+      <span className="grid size-11 place-items-center rounded-xl bg-accent text-accent-foreground ring-1 ring-primary/10">
+        <Icon className="size-5" aria-hidden />
+      </span>
       <p className="mt-3 text-sm font-medium">{title}</p>
       {children && <div className="mt-1 max-w-sm text-sm text-muted-foreground">{children}</div>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   )
 }
@@ -141,7 +161,7 @@ export function Field({ label, children, hint, error }: { label: string; childre
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn('flex items-center gap-2 font-semibold tracking-tight', className)}>
-      <span aria-hidden className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
+      <span aria-hidden className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-primary to-[color-mix(in_oklch,var(--primary)_70%,oklch(0.6_0.15_230))] text-primary-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_-2px_var(--primary)]">
         <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 7l8-4 8 4-8 4-8-4z" />
           <path d="M4 12l8 4 8-4" />

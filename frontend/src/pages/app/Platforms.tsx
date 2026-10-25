@@ -88,7 +88,7 @@ export function Platforms() {
       {cov && cov.rows.length > 0 && (
         <Panel title="Coverage: live products by category and platform" className="mt-4">
           <div tabIndex={0} className="overflow-x-auto">
-            <table className="w-full min-w-[40rem] text-sm">
+            <table className="data w-full min-w-[40rem] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 font-medium">Category</th>

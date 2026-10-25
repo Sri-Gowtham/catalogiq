@@ -230,7 +230,7 @@ export function Catalog() {
       ) : (
         <div className={cn('surface overflow-hidden p-0 transition-opacity', isFetching && 'opacity-70')}>
           <div tabIndex={0} className="overflow-x-auto">
-            <table className="w-full min-w-[58rem] text-sm">
+            <table className="data w-full min-w-[58rem] text-sm">
               <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="w-10 py-2.5 pl-4 font-medium">

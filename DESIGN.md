@@ -3,7 +3,7 @@
 Read this before changing the UI.
 
 ## Direction
-An operations product for catalog teams: calm, dense where data lives, trustworthy. Light theme only. One accent
+An operations product for catalog teams: calm, dense where data lives, trustworthy. Light and dark themes (system by default). Elevation: flat `surface`, `surface-raised` for the one leading panel per page, `surface-floating` for menus. Chart colours are the validated `--chart-1..5` slots. One accent
 (CatalogIQ blue, `--primary`). Status colours carry meaning only: `--pass`, `--review`, `--flagged`.
 
 ## Sources

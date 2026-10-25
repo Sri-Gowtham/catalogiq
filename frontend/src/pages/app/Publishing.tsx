@@ -46,7 +46,7 @@ export function Publishing() {
             <Empty title="Nothing here" />
           ) : (
             <div tabIndex={0} className="max-h-[36rem] overflow-auto">
-              <table className="w-full min-w-[36rem] text-sm">
+              <table className="data w-full min-w-[36rem] text-sm">
                 <thead className="sticky top-0 bg-card text-left text-xs text-muted-foreground">
                   <tr>
                     <th className="pb-2 font-medium">Date</th>

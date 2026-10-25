@@ -54,7 +54,7 @@ export function Reports() {
           <p className="mt-3 text-xs text-muted-foreground">Estimates, not measured results.</p>
         </Panel>
         <Panel title="Quality by category">
-          <table className="w-full text-sm">
+          <table className="data w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">
               <tr>
                 <th className="pb-2 font-medium">Category</th>

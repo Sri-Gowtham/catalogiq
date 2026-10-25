@@ -91,6 +91,7 @@ export function Performance() {
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <Panel
+          lead
           className="xl:col-span-2"
           title="Trend"
           action={
@@ -122,7 +123,7 @@ export function Performance() {
                   width={60}
                 />
                 <Tooltip labelFormatter={(l) => formatDay(String(l))} formatter={(v) => (metric === 'revenue' ? formatInr(Number(v)) : formatNum(Number(v)))} />
-                <Line type="monotone" dataKey={metric} stroke="var(--primary)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey={metric} stroke="var(--chart-1)" strokeWidth={2} dot={false} activeDot={{ r: 4, stroke: "var(--card)", strokeWidth: 2 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -134,7 +135,7 @@ export function Performance() {
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="key" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                 <Tooltip formatter={(v) => formatInr(Number(v))} />
-                <Bar dataKey="revenue" fill="var(--primary)" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="revenue" fill="var(--chart-1)" radius={[0, 4, 4, 0]} maxBarSize={18} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -150,7 +151,7 @@ export function Performance() {
           <Empty title="No listings here" />
         ) : (
           <div tabIndex={0} className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data w-full text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 font-medium">Product</th>

@@ -62,6 +62,7 @@ export function Overview() {
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <Panel
+          lead
           className={showAttention ? 'xl:col-span-2' : 'xl:col-span-3'}
           title="Sales, last 30 days"
           tag={demo && <DataTag kind="demo" />}
@@ -82,15 +83,15 @@ export function Overview() {
               <AreaChart data={data.series} margin={{ left: 0, right: 8, top: 4 }}>
                 <defs>
                   <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.22} />
-                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="day" tickFormatter={formatDay} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" tickLine={false} axisLine={false} minTickGap={24} />
                 <YAxis tickFormatter={(v) => formatInrCompact(v)} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" tickLine={false} axisLine={false} width={64} />
                 <Tooltip formatter={(v) => formatInrCompact(Number(v))} labelFormatter={(l) => formatDay(String(l))} />
-                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="var(--primary)" strokeWidth={2} fill="url(#rev)" />
+                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="var(--chart-1)" strokeWidth={2} fill="url(#rev)" activeDot={{ r: 4, stroke: 'var(--card)', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -152,7 +153,7 @@ export function Overview() {
             </Link>
           }
         >
-          <table className="w-full text-sm">
+          <table className="data w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
                 <th className="pb-2 font-medium">Platform</th>

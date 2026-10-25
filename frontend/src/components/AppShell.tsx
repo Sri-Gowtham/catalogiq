@@ -80,7 +80,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors',
-                      isActive ? 'bg-primary/8 font-medium text-primary' : 'text-foreground/75 hover:bg-muted hover:text-foreground',
+                      isActive ? 'bg-primary/10 font-medium text-primary shadow-[inset_2px_0_0_var(--primary)]' : 'text-foreground/75 hover:bg-muted hover:text-foreground',
                     )
                   }
                 >
@@ -312,7 +312,7 @@ export function AppShell() {
       >
         Skip to content
       </a>
-      <aside className="sticky top-0 hidden h-screen flex-col border-r bg-card/60 lg:flex">
+      <aside className="sticky top-0 hidden h-screen flex-col border-r bg-sidebar lg:flex">
         <div className="flex h-14 items-center border-b px-5">
           <Link to="/app">
             <Logo />
@@ -372,7 +372,7 @@ export function AppShell() {
         </header>
         <main id="main" tabIndex={-1} className="mx-auto max-w-7xl px-4 py-6 outline-none sm:px-6 lg:py-8">
           <Suspense fallback={<Loading className="h-[60vh]" />}>
-            {allowed ? <Outlet /> : <NoAccess />}
+            <div key={location.pathname} className="page-enter">{allowed ? <Outlet /> : <NoAccess />}</div>
           </Suspense>
         </main>
       </div>

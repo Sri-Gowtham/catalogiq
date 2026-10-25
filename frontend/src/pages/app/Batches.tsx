@@ -139,7 +139,7 @@ function UploadArea() {
           }
         >
           <div tabIndex={0} className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="data w-full text-xs">
               <thead className="text-left text-muted-foreground">
                 <tr>
                   {preview.columns.slice(0, 8).map((c) => (
@@ -192,7 +192,7 @@ export function Batches() {
         <Empty title="No batches yet">Upload a supplier feed (CSV or JSON) to start.</Empty>
       ) : (
         <div tabIndex={0} className="surface overflow-x-auto p-0">
-          <table className="w-full min-w-[52rem] text-sm">
+          <table className="data w-full min-w-[52rem] text-sm">
             <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
                 <th className="px-4 py-2.5 font-medium">Batch</th>
@@ -335,7 +335,7 @@ export function BatchDetail() {
             <Empty title={active(b.status) ? 'Products appear when the run finishes' : 'No products'} />
           ) : (
             <div tabIndex={0} className="max-h-[32rem] overflow-y-auto">
-              <table className="w-full text-sm">
+              <table className="data w-full text-sm">
                 <thead className="sticky top-0 bg-card text-left text-xs text-muted-foreground">
                   <tr>
                     <th className="pb-2 font-medium">Product</th>
