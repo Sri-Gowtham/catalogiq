@@ -1,0 +1,31 @@
+# Render Blueprint: one web service built from the Dockerfile, with a persistent disk for the SQLite database.
+# The disk is why this needs a paid instance; on a free instance the data would be lost on every restart.
+# Run one instance only: runs and sign-in limits are kept in the memory of the process.
+services:
+  - type: web
+    name: catalogiq
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    disk:
+      name: catalogiq-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: CATALOGIQ_JWT_SECRET
+        generateValue: true
+      - key: CATALOGIQ_COOKIE_SECURE
+        value: "1"
+      # The "View demo" button signs in with a published password. Remove this line to turn demo logins off.
+      - key: CATALOGIQ_ENABLE_DEMO
+        value: "1"
+      # Stays local until the agent workflow has authentication. Then set this to remote and fill in the next two.
+      - key: CATALOGIQ_WORKBENCH
+        value: local
+      - key: CATALOGIQ_WORKBENCH_URL
+        sync: false
+      - key: CATALOGIQ_WORKBENCH_KEY
+        sync: false
+      # Longer than the workflow node's own 300 s limit, so a slow model step is reported by the workflow and not cut off here.
+      - key: CATALOGIQ_WORKBENCH_TIMEOUT
+        value: "360"

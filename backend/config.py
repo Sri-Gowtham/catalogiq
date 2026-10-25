@@ -3,7 +3,7 @@ import secrets
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_DIR = ROOT / "output"
+OUTPUT_DIR = Path(os.environ.get("CATALOGIQ_OUTPUT", ROOT / "output"))  # uploads and run state; on a host this is on the data disk
 MOCK_DIR = ROOT / "mock"
 SAMPLE_DIR = ROOT / "sample_data"
 
