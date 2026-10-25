@@ -1,0 +1,19 @@
+# Render Blueprint for a free demo: no card needed, but there is NO persistent disk.
+# The database is recreated (with the demo data) on every restart or redeploy, and the service sleeps when idle.
+# Use render.yaml instead for anything that must keep its data.
+services:
+  - type: web
+    name: catalogiq-demo
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: CATALOGIQ_JWT_SECRET
+        generateValue: true
+      - key: CATALOGIQ_COOKIE_SECURE
+        value: "1"
+      # The "View demo" button signs in with a published password. Remove this line to turn demo logins off.
+      - key: CATALOGIQ_ENABLE_DEMO
+        value: "1"
+      - key: CATALOGIQ_WORKBENCH
+        value: local
