@@ -151,12 +151,15 @@ def test_rules(body: RuleTestIn, p: Principal = Depends(can_write), db=Depends(g
 @router.get("/workbench")
 def workbench(p: Principal = Depends(can_write), db=Depends(get_db)):
     wb = get_workbench()
+    # The connected workbench knows which agents really run and what they do; the built-in registry only describes the intended design.
+    listed = {x["id"]: x for x in wb.list_agents()}
     agents = []
     for a in AGENTS:
+        mine = listed.get(a.id, {})
         s = db.execute(
             "SELECT COUNT(*) AS runs, AVG(CASE WHEN status = 'done' THEN duration_ms END) AS avg_ms, SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed, "
             "SUM(CASE WHEN status = 'done' THEN processed ELSE 0 END) AS processed, SUM(tokens) AS tokens FROM agent_runs WHERE workspace_id = ? AND agent_id = ? AND status != 'pending'", (p.workspace_id, a.id)).fetchone()
-        agents.append(dict(id=a.id, name=a.name, layer=a.layer, mode=a.mode, description=a.description, in_pipeline=a.in_pipeline, runs=s["runs"], avg_ms=round(s["avg_ms"]) if s["avg_ms"] else None,
+        agents.append(dict(id=a.id, name=a.name, layer=a.layer, mode=mine.get("mode", a.mode), description=mine.get("description", a.description), in_pipeline=a.in_pipeline, runs=s["runs"], avg_ms=round(s["avg_ms"]) if s["avg_ms"] else None,
                            failed=s["failed"] or 0, processed=s["processed"] or 0, tokens=s["tokens"]))
     recent = db.execute(
         "SELECT r.*, b.name AS batch_name FROM agent_runs r LEFT JOIN batches b ON b.id = r.batch_id WHERE r.workspace_id = ? AND r.status != 'pending' ORDER BY r.id DESC LIMIT 25", (p.workspace_id,)).fetchall()

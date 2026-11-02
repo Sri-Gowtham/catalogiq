@@ -271,6 +271,22 @@ def test_http_error_fails_the_batch_without_leaking_the_address(remote):
         assert "secret-path" not in wb["endpoint"] and wb["status"] == "unreachable"
 
 
+def test_workbench_page_follows_the_connected_workflow(remote):
+    make, _ = remote
+    make(lambda request: httpx.Response(500, text="boom"))
+    from main import app
+
+    with TestClient(app) as client:
+        h = _login(client)
+        agents = {a["id"]: a for a in client.get("/api/workbench", headers=h).json()["agents"]}
+        for live in ("ingestion", "audit", "duplicate_detector", "image_analysis", "taxonomy", "channel_content", "brand_compliance", "quality_gate"):
+            assert agents[live]["mode"] == "live", live
+        for simulated in ("attribute_extraction", "translation", "publishing", "competitive_intel", "performance_monitor"):
+            assert agents[simulated]["mode"] == "simulated", simulated
+        assert "embeddings" in agents["duplicate_detector"]["description"] and "Not embeddings" in agents["duplicate_detector"]["description"]
+        assert "Not running" in agents["translation"]["description"]
+
+
 def test_timeout_bad_json_and_unarmed_test_url_are_reported(remote):
     make, _ = remote
     from main import app

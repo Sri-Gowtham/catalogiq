@@ -45,6 +45,20 @@ SECTIONS = [
     ("quality_summary", "quality_gate", "live"),
     ("publishing_summary", "publishing", "simulated"),
 ]
+# What each step really does in the connected workflow. The platform's own registry describes the intended design (embeddings, vision),
+# which is not what runs, so the page shows these instead whenever the remote workbench is in use.
+DESCRIPTIONS = {
+    "duplicate_detector": "Flags the same product under another code by word overlap on brand, name and size. Not embeddings.",
+    "image_analysis": "Checks image links, count and file type per marketplace. It does not look inside the picture.",
+    "attribute_extraction": "Planned: reads allergens, shelf life and nutrition from the text. Not running in the workflow yet.",
+    "channel_content": "An AI model writes titles, bullets and descriptions for each marketplace, within its limits.",
+    "brand_compliance": "Checks the content against the brand rulebook. A restricted claim holds the product.",
+    "translation": "Planned: the Arabic title for Noon. Not running in the workflow yet.",
+    "taxonomy": "Places each product in a marketplace category using whole-word keywords.",
+    "quality_gate": "Scores the product and holds anything below 70. Parts that did not run are left out of the score.",
+    "publishing": "Simulated: prepares the listing but calls no marketplace.",
+    "competitive_intel": "Simulated: synthetic benchmark data, not a live competitor watch.",
+}
 CHUNK = max(1, int(os.environ.get("CATALOGIQ_WORKBENCH_CHUNK", "3")))  # the description step is set to 3 products per call
 RETRIES = max(0, int(os.environ.get("CATALOGIQ_WORKBENCH_RETRIES", "1")))
 RETRY_WAIT = float(os.environ.get("CATALOGIQ_WORKBENCH_RETRY_WAIT", "8"))  # seconds; the model API's "high demand" errors are usually short
@@ -134,7 +148,7 @@ class RemoteWorkbench:
         out = []
         for a in AGENTS:
             if a.id in modes:
-                out.append(dict(id=a.id, name=a.name, layer=a.layer, mode=modes[a.id], description=a.description, in_pipeline=True))
+                out.append(dict(id=a.id, name=a.name, layer=a.layer, mode=modes[a.id], description=DESCRIPTIONS.get(a.id, a.description), in_pipeline=True))
         return out
 
     # ------------------------------------------------------------ runs
